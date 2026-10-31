@@ -201,6 +201,9 @@
     pager.prev.disabled = i === 0;
     pager.next.disabled = i === screens.length - 1;
     updateToc(screens[i]);
+    // Safari won't scroll inside a snap area taller than the window, so snapping pauses on tall screens
+    // (the sources, an opened note, the sim on a phone) and comes back on the next normal one.
+    document.documentElement.classList.toggle("free-scroll", screens[i].offsetHeight > window.innerHeight + 2);
   }
 
   function go(step) {
@@ -224,6 +227,7 @@
     requestAnimationFrame(() => { pagerQueued = false; updatePager(); });
   }, { passive: true });
   window.addEventListener("resize", updatePager);
+  document.addEventListener("toggle", updatePager, true);
   updatePager();
 
   // ---------- prologue: collect ----------

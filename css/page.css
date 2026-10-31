@@ -96,6 +96,7 @@ body.collected .toc { opacity: 1; pointer-events: auto; }
    centres the content. Taller screens (the sim on a phone) can still be scrolled through. */
 
 html { scroll-snap-type: y mandatory; }
+html.free-scroll { scroll-snap-type: none; }
 .screen { scroll-snap-align: start; min-height: 100svh; }
 .screen:has(.sim) { padding-block: 8vh; }
 
