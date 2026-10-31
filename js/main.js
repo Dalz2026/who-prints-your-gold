@@ -434,10 +434,9 @@
     pouch.bump();
 
     $("sim-result-text").textContent = simResultText(price);
-    const result = $("sim-result");
-    result.hidden = false;
+    $("after-sim").hidden = false;
     updatePager();
-    result.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "center" });
+    $("sim-result").scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "center" });
     fillReport(price);
   }
 
