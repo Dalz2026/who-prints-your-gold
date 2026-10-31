@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Who Prints Your Gold?</title>
+<meta name="description" content="A short trip through the economies we play in, and the real money that leaks out of them.">
+<meta property="og:title" content="Who Prints Your Gold?">
+<meta property="og:description" content="A short trip through the economies we play in, and the real money that leaks out of them.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23f2c94c' stroke='%236b4e00' stroke-width='3'/%3E%3Ctext x='16' y='22' font-size='16' font-family='monospace' font-weight='bold' text-anchor='middle' fill='%236b4e00'%3E%3F%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700&family=IBM+Plex+Mono:wght@400;600&family=Silkscreen&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/page.css">
+</head>
+<body data-phase="game">
+
+<!-- The map is filled in by main.js from the screens' data-toc-chapter / data-toc labels. -->
+<nav class="toc" id="toc" aria-label="Map">
+  <button class="toc-toggle" id="toc-toggle" aria-expanded="false" aria-controls="toc-list">☰ <span id="toc-current">MAP</span></button>
+  <ol id="toc-list"></ol>
+</nav>
+
+<aside class="pouch" id="pouch" hidden aria-label="Your coin pouch">
+  <span class="label">COIN POUCH</span>
+  <span class="amount" id="pouch-amount" aria-live="polite">0</span>
+  <span class="sub" id="pouch-sub"></span>
+  <span class="usd" id="pouch-usd" hidden>$ ???</span>
+</aside>
+
+<nav class="pager" aria-label="Screens">
+  <button class="btn" id="prev" aria-label="Previous screen">▲</button>
+  <span class="count" id="page-count"></span>
+  <button class="btn" id="next" aria-label="Next screen">NEXT ▼</button>
+</nav>
+
+<main>
+
+<!-- ===================== PROLOGUE ===================== -->
+
+<section class="screen title-screen" id="top" data-station="start" data-toc-chapter="Log in">
+  <div class="text">
+    <h1 class="display title">WHO PRINTS<br>YOUR GOLD?</h1>
+    <p class="lede">A short trip through the economies we play in, and the real money that leaks out of them.</p>
+    <p class="scroll-hint" aria-hidden="true">press NEXT ▼ or scroll</p>
+  </div>
+</section>
+
+<section class="screen" data-station="start" data-toc="Collect your gold">
+  <div class="text">
+    <p class="display line-big">You've just logged in.</p>
+    <p>Here's 1,000,000 gold. Don't spend it all at once.</p>
+    <p class="actions">
+      <button class="btn" id="collect">[ COLLECT ]</button>
+      <button class="skip" id="collect-skip">skip</button>
+    </p>
+  </div>
+</section>
+
+<div id="after-collect" hidden>
+
+<section class="screen" data-station="start" data-toc="Who prints it?">
+  <div class="text split">
+    <svg class="mint-coin" viewBox="0 0 200 200" aria-hidden="true">
+      <defs>
+        <radialGradient id="coin-face" cx="35%" cy="30%" r="75%">
+          <stop offset="0" stop-color="#fff3b0"/>
+          <stop offset=".45" stop-color="#f2c94c"/>
+          <stop offset="1" stop-color="#b8860b"/>
+        </radialGradient>
+        <linearGradient id="coin-shine" x1="0" x2="1">
+          <stop offset="0" stop-color="#fff" stop-opacity="0"/>
+          <stop offset=".5" stop-color="#fff" stop-opacity=".7"/>
+          <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+        </linearGradient>
+        <clipPath id="coin-clip"><circle cx="100" cy="100" r="92"/></clipPath>
+        <path id="coin-rim-path" d="M100,100 m-68,0 a68,68 0 1,1 136,0 a68,68 0 1,1 -136,0"/>
+      </defs>
+      <circle cx="106" cy="106" r="92" fill="#000"/>
+      <circle cx="100" cy="100" r="92" fill="#8a6410"/>
+      <circle cx="100" cy="100" r="88" fill="none" stroke="#d9a72a" stroke-width="7" stroke-dasharray="3 3"/>
+      <circle cx="100" cy="100" r="82" fill="url(#coin-face)"/>
+      <circle cx="100" cy="100" r="57" fill="none" stroke="#8a6410" stroke-width="3"/>
+      <circle cx="100" cy="100" r="53" fill="none" stroke="#fff3b0" stroke-width="1.5" opacity=".7"/>
+      <text class="coin-rim" textLength="424" lengthAdjust="spacing"><textPath href="#coin-rim-path">★ MINTED BY ??? ★ VALUE ??? ★ MINTED BY ???</textPath></text>
+      <text class="coin-mark" x="102" y="104" fill="#fff3b0" opacity=".6">?</text>
+      <text class="coin-mark" x="100" y="102" fill="#6b4e00">?</text>
+      <g clip-path="url(#coin-clip)">
+        <g transform="rotate(20 100 100)"><rect class="coin-shine" x="-80" y="-40" width="44" height="280" fill="url(#coin-shine)"/></g>
+      </g>
+    </svg>
+    <div>
+      <p>Every coin in that pouch was printed by someone.</p>
+      <p>Someone decided how many exist, how fast they appear, and where they go to disappear.</p>
+      <p>In this world, that someone isn't a government. It's a game studio.</p>
+    </div>
+  </div>
+</section>
+
+<section class="screen" data-station="start" data-toc="Your route" data-on-reveal="pouch">
+  <div class="text wide">
+    <p>By the end of this page, you'll find out what your gold is worth in real money.</p>
+    <p>Keep an eye on your pouch. It will change.</p>
+    <p class="kicker map-title">Your route</p>
+    <ol class="route-map">
+      <li class="panel"><span class="n">1</span><b>The Mint</b><span>where gold comes from</span></li>
+      <li class="panel"><span class="n">2</span><b>The Central Bank</b><span>who controls it</span></li>
+      <li class="panel"><span class="n">3</span><b>The Exchange</b><span>where gold becomes money</span></li>
+      <li class="panel"><span class="n">4</span><b>The Fallout</b><span>what happens to the people in between</span></li>
+      <li class="panel"><span class="n">5</span><b>The Bill</b><span>what your gold is worth</span></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ===================== CHAPTER 1: THE MINT ===================== -->
+
+<section class="screen chapter-head" id="ch-mint" data-station="mint" data-toc-chapter="The Mint">
+  <div class="text">
+    <h2 class="display chapter-title">The Mint</h2>
+    <p class="chapter-meta">
+      <span class="kicker">Chapter 1</span>
+      <span class="pips" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i><i></i></span>
+    </p>
+    <p class="chapter-sub">Where scarcity comes from</p>
+  </div>
+</section>
+
+<section class="screen" data-station="mint" data-toc="Taps and drains">
+  <div class="text split flip">
+    <div>
+      <p>A game economy has no farms, no factories and no central bank. It has rules.</p>
+      <p>Monsters drop coins. Shops buy your loot. Repairs cost money.</p>
+      <p>Every one of those rules is a pipe. Some pour gold in. Some drain it out.</p>
+    </div>
+    <figure class="tank" role="img" aria-label="Diagram: two pipes pour gold into the game, one pipe drains it out.">
+      <span class="lbl in" style="left:0;top:0"><b>TAP</b>monster drops</span>
+      <span class="lbl in" style="right:0;top:0;text-align:right"><b>TAP</b>shops buy loot</span>
+      <span class="pipe" style="left:3.3em;top:2.8em;height:3.2em"></span>
+      <span class="pipe" style="right:3.3em;top:2.8em;height:3.2em"></span>
+      <span class="pool"><span class="fill"></span><span class="pool-lbl">all the gold in the game</span></span>
+      <span class="pipe" style="left:8.3em;top:16em;height:2.6em"></span>
+      <span class="lbl out" style="left:58%;top:80%"><b>DRAIN</b>repairs, tax</span>
+      <span class="drop" style="--left:3.56em;--top:6em;--d:4.5em;--delay:0s"></span>
+      <span class="drop" style="--left:3.56em;--top:6em;--d:4.5em;--delay:.8s"></span>
+      <span class="drop" style="--left:13.56em;--top:6em;--d:4.5em;--delay:.4s"></span>
+      <span class="drop" style="--left:13.56em;--top:6em;--d:4.5em;--delay:1.2s"></span>
+      <span class="drop" style="--left:8.56em;--top:18.6em;--d:2.6em;--delay:.2s"></span>
+      <span class="drop" style="--left:8.56em;--top:18.6em;--d:2.6em;--delay:1s"></span>
+    </figure>
+  </div>
+</section>
+
+<section class="screen" data-station="mint" data-toc="Five pipes">
+  <div class="text wide pipes-wrap">
+    <p>Designers call these pipes by simple names.</p>
+    <ul class="pipes">
+      <li class="panel"><b>Tap</b><span>Gold appears out of nowhere.</span><i>A wolf drops 30 coins.</i></li>
+      <li class="panel"><b>Inventory</b><span>Gold piles up.</span><i>Your bank.</i></li>
+      <li class="panel"><b>Converter</b><span>One thing becomes another.</span><i>Ore becomes a sword.</i></li>
+      <li class="panel"><b>Drain</b><span>Gold vanishes for good.</span><i>A repair bill. A tax. Rent.</i></li>
+      <li class="panel"><b>Trader</b><span>Things change hands, but nothing new is made.</span><i>The market.</i></li>
+    </ul>
+    <aside class="source">
+      <span class="name">Source · Game Maker's Toolkit, 2022</span>
+      <a href="https://www.youtube.com/watch?v=Zrf1cou_yVo" target="_blank" rel="noopener">“How Video Game Economies are Designed”</a>.
+      See also Zachary Booth Simpson, <a href="https://gwern.net/doc/economics/1999-04-07-simpson-theingameconomicsofultimaonline.html" target="_blank" rel="noopener">“The In-game Economics of Ultima Online”</a> (1999).
+    </aside>
+  </div>
+</section>
+
+<section class="screen" data-station="mint" data-toc="Run the server">
+  <div class="text wide">
+    <p>Your turn. You run a small server for 30 days.</p>
+    <p>Keep the price of a sword between 80 and 120 gold. Players are watching.</p>
+
+    <div class="panel sim" id="sim">
+      <div class="sim-top">
+        <span id="sim-day">DAY 0 / 30</span>
+        <span id="sim-price">SWORD: 100 gold</span>
+      </div>
+      <svg class="sim-chart" id="sim-chart" viewBox="0 0 300 150" preserveAspectRatio="none" role="img" aria-label="Sword price over 30 days">
+        <rect id="sim-band" x="0" y="0" width="300" height="0" class="band"/>
+        <polyline id="sim-line" class="line" points=""/>
+      </svg>
+      <div class="sim-events" id="sim-events" aria-live="polite"></div>
+      <div class="sim-controls">
+        <label>TAP <small>drops</small>
+          <input type="range" id="sim-tap" min="0" max="100" value="50">
+        </label>
+        <label>DRAIN <small>repairs, tax</small>
+          <input type="range" id="sim-drain" min="0" max="100" value="50">
+        </label>
+      </div>
+      <div class="chat sim-chat" id="sim-chat" aria-live="polite"><span class="muted">The server is quiet.</span></div>
+      <p class="actions">
+        <button class="btn" id="sim-start">[ START ]</button>
+        <button class="skip" id="sim-skip">skip</button>
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="screen" data-station="mint" id="sim-result" data-toc="Server report" hidden>
+  <div class="text wide">
+    <div class="panel report">
+      <p class="report-head"><span>SERVER REPORT</span><span>DAY 30 / 30</span></p>
+      <p class="display verdict" id="rep-verdict"></p>
+      <div class="stats">
+        <div class="stat" id="rep-price-box"><span class="k">SWORD PRICE</span><span class="v" id="rep-price">100</span><span class="d" id="rep-price-d"></span></div>
+        <div class="stat" id="rep-players-box"><span class="k">PLAYERS</span><span class="v" id="rep-players">1,000</span><span class="d" id="rep-players-d"></span></div>
+        <div class="stat" id="rep-swords-box"><span class="k">YOUR GOLD BUYS</span><span class="v" id="rep-swords">10,000</span><span class="d">swords · was 10,000</span></div>
+      </div>
+      <svg class="sim-chart report-chart" viewBox="0 0 300 150" preserveAspectRatio="none" aria-hidden="true">
+        <rect id="rep-band" x="0" y="0" width="300" height="0" class="band"/>
+        <polyline id="rep-line" class="line" points=""/>
+      </svg>
+    </div>
+    <p class="report-text" id="sim-result-text"></p>
+    <p class="report-pouch">Check your pouch.</p>
+  </div>
+</section>
+
+<section class="screen" data-station="mint" data-toc="Ultima Online">
+  <div class="text">
+    <p>This isn't a thought experiment. It happened to one of the first big online worlds.</p>
+    <p><i>Ultima Online</i> opened in 1997. In its first months, a bug let players clone gold. An analyst of the game's economy later called the result “extremely damaging.”</p>
+    <p>Then there were the shops. Computer-run merchants bought almost anything players made, paying in fresh coins.</p>
+    <blockquote class="quote">
+      “They're just a gold spigot.”
+      <cite>Raph Koster, lead designer of <i>Ultima Online</i></cite>
+    </blockquote>
+    <aside class="source">
+      <span class="name">Source · Simpson 1999; Koster 2002</span>
+      <a href="https://gwern.net/doc/economics/1999-04-07-simpson-theingameconomicsofultimaonline.html" target="_blank" rel="noopener">“The In-game Economics of Ultima Online”</a>;
+      <a href="https://www.raphkoster.com/?p=16263" target="_blank" rel="noopener">“The evolution of UO's economy”</a>
+    </aside>
+  </div>
+</section>
+
+<section class="screen" data-station="mint" data-toc="Gold for dollars" data-on-reveal="rate">
+  <div class="text">
+    <p>At one stable point, about 200 gold bought one US dollar.</p>
+    <div class="panel rate" id="uo-rate" role="img" aria-label="Ultima Online gold per US dollar: about 200 at one point, about 20,000 later.">
+      <span class="rate-label">ULTIMA ONLINE · GOLD PER US$1</span>
+      <span class="rate-num" id="uo-rate-num">200</span>
+      <span class="rate-note" id="uo-rate-note">at one stable point</span>
+    </div>
+    <p>By the time Koster checked again, a coin was worth about a hundred times less.</p>
+    <p class="turn">Wait. Bought one <i>US dollar</i>?</p>
+  </div>
+</section>
+
+<section class="screen" data-station="mint" data-toc="Norrath">
+  <div class="text">
+    <p>Economist Edward Castronova noticed the same thing. In 2001 he studied <i>EverQuest</i>'s world, Norrath, as if it were a country.</p>
+    <p>Average wage: about $3.42 an hour. Output per person: somewhere between Russia's and Bulgaria's. Its currency traded higher than the Japanese yen.</p>
+    <aside class="source">
+      <span class="name">Source · Castronova, 2001</span>
+      <a href="https://www.ifo.de/DocDL/cesifo_wp618.pdf" target="_blank" rel="noopener">“Virtual Worlds: A First-Hand Account of Market and Society on the Cyberian Frontier”</a>, CESifo Working Paper 618
+    </aside>
+    <details class="note">
+      <summary>It wasn't just Ultima Online</summary>
+      <p>Between 2005 and 2008, game gold lost value against the dollar almost everywhere: about 55% in <i>RuneScape</i>, 80% in <i>World of Warcraft</i> and 86% in <i>EVE Online</i>.</p>
+      <p class="cite">Richard Heeks, <a href="https://hummedia.manchester.ac.uk/institutes/gdi/publications/workingpapers/di/di_wp32.pdf" target="_blank" rel="noopener">“Current Analysis and Future Research Agenda on ‘Gold Farming’”</a> (2008)</p>
+    </details>
+    <p>If game gold has an exchange rate, the people who print it aren't only designing a game.</p>
+    <p class="turn">They're running a central bank.</p>
+  </div>
+</section>
+
+<!-- ===================== CHAPTER 2: THE CENTRAL BANK ===================== -->
+<!-- Each interaction in this chapter is a gate: what follows stays hidden until the reader acts. -->
+
+<section class="screen chapter-head" id="ch-bank" data-station="bank" data-toc-chapter="The Central Bank">
+  <div class="text">
+    <h2 class="display chapter-title">The Central Bank</h2>
+    <p class="chapter-meta">
+      <span class="kicker">Chapter 2</span>
+      <span class="pips" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span>
+    </p>
+    <p class="chapter-sub">Who controls the gold</p>
+  </div>
+</section>
+
+<section class="screen" data-station="bank" data-toc="The dev console">
+  <div class="text split flip">
+    <div>
+      <p>A real central bank answers to a government. A game's central bank answers to a company.</p>
+      <p>It can print money by raising drop rates. It can destroy money with new taxes. It can freeze your account, roll back the market, or ban trading altogether.</p>
+      <p>Castronova put it simply: in a virtual world, the developers <i>are</i> the central bank.</p>
+      <aside class="source">
+        <span class="name">Source · Castronova 2005, reviewed by Madden 2006</span>
+        <i>Synthetic Worlds</i>, reviewed in <a href="https://minneapolisfed.org/article/2006/synthetic-worlds-the-business-and-culture-of-online-games" target="_blank" rel="noopener">“Synthetic Worlds: The Business and Culture of Online Games”</a>, Federal Reserve Bank of Minneapolis
+      </aside>
+      <details class="note">
+        <summary>Some studios take the job literally</summary>
+        <p>In 2007, <i>EVE Online</i> hired a real economist, Dr Eyjólfur Guðmundsson, to publish quarterly reports on inflation, growth and prices. “Economic information is the lifeblood of the game.”</p>
+        <p class="cite">CCP, <a href="https://community.eveonline.com/news/news-channels/press-releases/eve-online-appoints-in-world-economist-1" target="_blank" rel="noopener">“EVE Online Appoints In-World Economist”</a> (2007)</p>
+      </details>
+    </div>
+    <figure class="panel console" role="img" aria-label="A developer console listing a studio's powers: print money, destroy money, freeze accounts, roll back the market, ban trading.">
+      <p class="console-head">DEV CONSOLE · ADMIN ONLY</p>
+      <ol>
+        <li><code>&gt; set drop_rate x2</code><span>print money</span></li>
+        <li><code>&gt; add tax 10%</code><span>destroy money</span></li>
+        <li><code>&gt; freeze account</code><span>freeze you</span></li>
+        <li><code>&gt; rollback market</code><span>undo the market</span></li>
+        <li><code>&gt; disable trade --all</code><span>ban trading</span></li>
+      </ol>
+      <span class="console-cursor" aria-hidden="true">&gt; _</span>
+    </figure>
+  </div>
+</section>
+
+<section class="screen" data-station="bank" data-toc="Crisis room">
+  <div class="text wide">
+    <p>It's late 2007. You run <i>RuneScape</i>.</p>
+    <p>Gold sellers are everywhere. Bot accounts farm coins around the clock, and players buy them for real money on outside websites.</p>
+    <div class="panel crisis" id="crisis">
+      <div class="chat crisis-chat" id="crisis-chat" aria-live="polite">
+        <div><span class="who">gp4u_7731: </span>CHEAP GP ★ FAST DELIVERY ★ BEST PRICE</div>
+        <div><span class="who">lumbridge_lad: </span>can a mod do something about these bots</div>
+        <div><span class="who">gp4u_7732: </span>CHEAP GP ★ FAST DELIVERY ★ BEST PRICE</div>
+      </div>
+      <p class="crisis-q">What do you do?</p>
+      <div class="choices">
+        <button class="btn" data-choice="ban">Ban the bots</button>
+        <button class="btn" data-choice="limit">Limit trading</button>
+        <button class="btn" data-choice="sell">Sell gold ourselves</button>
+        <button class="btn" data-choice="nothing">Do nothing</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div id="after-crisis" hidden>
+
+<section class="screen" data-station="bank" id="crisis-result" data-toc="Decided for everyone">
+  <div class="text">
+    <p class="picked-line" id="crisis-picked"></p>
+    <p class="display line-big">It doesn't matter what you picked.</p>
+    <p>On 10 December 2007, Jagex decided for everyone. Any trade where one side gave more than 3,000 gold in value would be blocked.</p>
+    <blockquote class="quote">
+      “To remove real-world trading from RuneScape, we must stop the gold sellers' ability to function.”
+      <cite>Jagex, 2007</cite>
+    </blockquote>
+    <aside class="source">
+      <span class="name">Source · Jagex, 2007</span>
+      RuneScape Wiki, <a href="https://runescape.wiki/w/Update:Trade_and_Drop_Changes" target="_blank" rel="noopener">“Update:Trade and Drop Changes”</a>
+    </aside>
+  </div>
+</section>
+
+<section class="screen" data-station="bank" data-toc="Trade blocked">
+  <div class="text">
+    <p>Try it. Send 50,000 gold to a friend.</p>
+    <div class="panel trade" id="trade">
+      <p class="trade-head">TRADING WITH: <b>friend</b></p>
+      <div class="trade-cols">
+        <div><span class="k">YOUR OFFER</span><span class="v">50,000 gold</span></div>
+        <div><span class="k">FRIEND'S OFFER</span><span class="v muted">nothing</span></div>
+      </div>
+      <p class="actions"><button class="btn" id="trade-send">[ SEND ]</button></p>
+      <p class="alert" id="trade-alert" role="alert" hidden>✕ Trade blocked: unbalanced by more than 3,000 gold.</p>
+    </div>
+    <p id="trade-after" hidden>The rule hit gold sellers. It also hit every honest player who wanted to give a friend a gift, pay back a loan, or make a fair trade. Free trade was gone, for everyone.</p>
+  </div>
+</section>
+
+<div id="after-send" hidden>
+
+<section class="screen" data-station="bank" data-toc="The vote">
+  <div class="text">
+    <p>Three years later, something unusual happened. The central bank asked the people.</p>
+    <p>In a referendum running from 24 December 2010 to 14 January 2011, Jagex let players decide: should free trade come back?</p>
+    <div class="panel vote" id="vote">
+      <p class="vote-q">Your vote:</p>
+      <div class="choices three">
+        <button class="btn" data-vote="Yes">Yes</button>
+        <button class="btn" data-vote="No">No</button>
+        <button class="btn" data-vote="Don't mind">Don't mind</button>
+      </div>
+      <div class="bars" id="vote-bars" hidden>
+        <div class="bar" data-opt="Yes" style="--pct:91"><span class="lbl">Yes</span><span class="track"><span class="fill"></span></span><span class="pct">91%</span></div>
+        <div class="bar" data-opt="No" style="--pct:7"><span class="lbl">No</span><span class="track"><span class="fill"></span></span><span class="pct">7%</span></div>
+        <div class="bar" data-opt="Don't mind" style="--pct:2"><span class="lbl">Don't mind</span><span class="track"><span class="fill"></span></span><span class="pct">2%</span></div>
+        <p class="vote-total"><span id="vote-count">0</span> votes</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div id="after-vote" hidden>
+
+<section class="screen" data-station="bank" data-toc="Free trade returns">
+  <div class="text">
+    <p class="display line-big">1,234,658 votes. 91% said yes.</p>
+    <p>On 1 February 2011, free trade returned.</p>
+    <p class="unlock-line">Your pouch is unlocked.</p>
+    <aside class="source">
+      <span class="name">Source · RuneScape Wiki; Jagex, 2011</span>
+      <a href="https://runescape.wiki/w/Wilderness_and_Free_Trade_Vote" target="_blank" rel="noopener">“Wilderness and Free Trade Vote”</a>;
+      <a href="https://secure.runescape.com/m=news/the-wilderness-and-free-trade-will-return" target="_blank" rel="noopener">“The Wilderness and Free Trade will return”</a>
+    </aside>
+  </div>
+</section>
+
+<section class="screen" data-station="bank" data-toc="Who decided">
+  <div class="text wide">
+    <p>The gold sellers came back too.</p>
+    <p>By November 2011, new free accounts were again limited to giving away 25,000 gold a day.</p>
+    <p class="kicker timeline-title">Who decided</p>
+    <ol class="timeline">
+      <li><span class="when">Dec 2007</span><b class="who">Jagex</b><span class="what">blocks unbalanced trades</span></li>
+      <li class="players"><span class="when">Jan 2011</span><b class="who">Players</b><span class="what">vote free trade back</span></li>
+      <li><span class="when">Nov 2011</span><b class="who">Jagex</b><span class="what">limits new accounts again</span></li>
+    </ol>
+    <p class="turn">Players got one vote in this story. Most of the time, they get none.</p>
+    <aside class="source">
+      <span class="name">Source · Jagex, 2011</span>
+      RuneScape Wiki, <a href="https://runescape.wiki/w/Update:Anti-Gold-Farming_Measures" target="_blank" rel="noopener">“Update:Anti-Gold-Farming Measures”</a>
+    </aside>
+    <details class="note">
+      <summary>There's a twist</summary>
+      <p>The version of the game most people play today, <i>Old School RuneScape</i>, was rebuilt in 2013 from a backup made on 10 August 2007, four months before the trade limits. The game players asked to bring back was the one before the central bank stepped in.</p>
+      <p class="cite">Old School RuneScape Wiki, <a href="https://oldschool.runescape.wiki/w/Old_School_RuneScape" target="_blank" rel="noopener">“Old School RuneScape”</a></p>
+    </details>
+  </div>
+</section>
+
+<section class="screen" data-station="bank" data-toc="For profit">
+  <div class="text">
+    <p>One more difference between a game's central bank and a real one.</p>
+    <p class="turn">A real central bank isn't trying to make a profit from you.</p>
+    <figure class="post">
+      <p class="post-head"><span>r/2007scape · reply</span><span>▲ 511</span></p>
+      <blockquote>they know we won't stop playing</blockquote>
+      <figcaption>An r/2007scape user, replying to a player's own analysis of Jagex's accounts</figcaption>
+    </figure>
+    <aside class="source">
+      <span class="name">Source · r/2007scape, around 2022</span>
+      <a href="https://www.reddit.com/r/2007scape/s/wzKE4EXrCC" target="_blank" rel="noopener">“Jagex 2019/2020 Financial Report Analysis”</a>
+    </aside>
+    <details class="note">
+      <summary>Meanwhile, in 2011</summary>
+      <p>In 2011, the same year it gave players a vote, <i>RuneScape</i> launched a loyalty programme: points for every month you kept paying, and more for every month in a row. YouTuber Josh Strife Hayes files it in his “Pandora's Box” of abusive monetization strategies.</p>
+      <p class="cite">Josh Strife Hayes, <a href="https://www.youtube.com/watch?v=g16heGLKlTA" target="_blank" rel="noopener">“What Went Wrong with Gaming?”</a> (shown in class)</p>
+    </details>
+  </div>
+</section>
+
+<!-- ===================== CHAPTER 3: THE EXCHANGE ===================== -->
+<!-- One interaction: the price toggle. It only goes one way, and it moves the whole page into the paper phase. -->
+
+<section class="screen chapter-head" id="ch-exchange" data-station="exchange" data-toc-chapter="The Exchange">
+  <div class="text">
+    <h2 class="display chapter-title">The Exchange</h2>
+    <p class="chapter-meta">
+      <span class="kicker">Chapter 3</span>
+      <span class="pips" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span>
+    </p>
+    <p class="chapter-sub">When gold becomes money</p>
+  </div>
+</section>
+
+<section class="screen" data-station="exchange" data-toc="Strangers at the counter">
+  <div class="text wide">
+    <p>Remember <i>Ultima Online</i>? Its gold had a price in US dollars before anyone at the studio set one.</p>
+    <p>That's the thing about game gold. If people want it, someone will sell it. The only question is who gets to run the counter.</p>
+    <p>For years, <i>RuneScape</i>'s counter was run by strangers. In 2013, Jagex counted the damage:</p>
+    <div class="stats counter-stats">
+      <div class="stat bad"><span class="v">170 billion</span><span class="d">gold sold by gold farmers, every day</span></div>
+      <div class="stat bad"><span class="v">40%+</span><span class="d">of active players had bought gold from outside sellers</span></div>
+      <div class="stat bad"><span class="v">1.1 million</span><span class="d">bans on gold-farming accounts, that year alone</span></div>
+    </div>
+    <p class="turn">Bans hadn't worked. Trade limits hadn't worked. So Jagex tried something else.</p>
+    <aside class="source">
+      <span class="name">Source · Jagex, 2013</span>
+      RuneScape Wiki, <a href="https://runescape.wiki/w/Update:Blog_-_An_outline_of_the_impact_of_RuneScape_Bonds" target="_blank" rel="noopener">“An outline of the impact of RuneScape Bonds”</a>
+    </aside>
+  </div>
+</section>
+
+<section class="screen" data-station="exchange" data-toc="The Bond" data-on-reveal="usd">
+  <div class="text split flip">
+    <div>
+      <p class="display line-big">It opened its own counter.</p>
+      <p>In September 2013, Jagex introduced the Bond. You buy one with real money. Then you can use it for membership, or sell it to another player for gold.</p>
+      <p><i>Old School RuneScape</i> got its own Bonds in 2015. Today one costs $9.99. On the in-game market, it sells for about 9.8 million gold.</p>
+      <p class="turn">You might be doing the maths right now. Hold that thought.</p>
+      <aside class="source">
+        <span class="name">Source · Jagex, 2013; OSRS Wiki</span>
+        <a href="https://oldschool.runescape.wiki/w/Old_school_bond" target="_blank" rel="noopener">“Old school bond”</a>;
+        <a href="https://oldschool.runescape.wiki/w/Update:Membership_%26_Bonds_Price_Change" target="_blank" rel="noopener">“Update:Membership &amp; Bonds Price Change”</a> (2026)
+      </aside>
+      <details class="note">
+        <summary>The price keeps going up</summary>
+        <p>In March 2026, Jagex raised the price of membership and Bonds, saying it wanted the game to be “sustainable for the next 25 years, not just the last 25.” Years earlier, one r/2007scape user had predicted it: “the price will keep going up, because we keep paying it.”</p>
+        <p class="cite">OSRS Wiki, “Update:Membership &amp; Bonds Price Change” (2026); r/2007scape, <a href="https://www.reddit.com/r/2007scape/s/wzKE4EXrCC" target="_blank" rel="noopener">“Jagex 2019/2020 Financial Report Analysis”</a> (around 2022)</p>
+      </details>
+    </div>
+    <figure class="panel bond" role="img" aria-label="An Old School Bond: pay $9.99 in real money, then use it for 14 days of membership or sell it to another player for about 9,800,000 gold.">
+      <p class="bond-head"><span>OLD SCHOOL BOND</span><span>№ 0001</span></p>
+      <svg class="bond-seal" viewBox="0 0 60 60" aria-hidden="true">
+        <circle cx="30" cy="30" r="26" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3 3"/>
+        <circle cx="30" cy="30" r="18" fill="var(--accent)" stroke="#6b4e00" stroke-width="2"/>
+        <path d="M22 30h16M30 22v16" stroke="#6b4e00" stroke-width="3"/>
+      </svg>
+      <div class="bond-row pay"><span class="k">PAY</span><span class="v">$9.99</span><span class="d">real money, to the studio</span></div>
+      <div class="bond-tear" aria-hidden="true"></div>
+      <div class="bond-row"><span class="k">USE IT FOR</span><span class="v small">14 days of membership</span></div>
+      <div class="bond-row"><span class="k">OR SELL IT FOR</span><span class="v">≈ 9,800,000 gold</span><span class="d">to another player</span></div>
+    </figure>
+  </div>
+</section>
+
+<section class="screen" data-station="exchange" id="price-tag" data-toc="The price tag">
+  <div class="text wide">
+    <p>Here's a shop.</p>
+    <div class="panel shop" id="shop">
+      <p class="shop-head"><span>GRAND EXCHANGE · GUIDE PRICES</span><span id="shop-unit">IN GOLD</span></p>
+      <ul class="items">
+        <li class="item" data-gp="150">
+          <svg viewBox="0 0 40 40" aria-hidden="true"><rect x="7" y="7" width="26" height="26" rx="9" fill="none" stroke="currentColor" stroke-width="3"/><path d="M14 26c0-8 5-12 12-12 0 7-4 12-12 12zM14 26l6-6" fill="none" stroke="var(--accent)" stroke-width="2.5"/></svg>
+          <span class="name">Nature rune</span><span class="price">150 gold</span><span class="was"></span>
+        </li>
+        <li class="item" data-gp="3500">
+          <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M13 27l14-14" stroke="currentColor" stroke-width="4"/><circle cx="10" cy="26" r="4" fill="var(--accent)" stroke="currentColor" stroke-width="2"/><circle cx="14" cy="30" r="4" fill="var(--accent)" stroke="currentColor" stroke-width="2"/><circle cx="26" cy="10" r="4" fill="var(--accent)" stroke="currentColor" stroke-width="2"/><circle cx="30" cy="14" r="4" fill="var(--accent)" stroke="currentColor" stroke-width="2"/></svg>
+          <span class="name">Dragon bones</span><span class="price">3,500 gold</span><span class="was"></span>
+        </li>
+        <li class="item" data-gp="617000">
+          <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M7 33l7-7" stroke="currentColor" stroke-width="5" stroke-linecap="round"/><path d="M14 26c7-5 3-14 12-17 6-2 8 6 3 10" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"/></svg>
+          <span class="name">Abyssal whip</span><span class="price">617,000 gold</span><span class="was"></span>
+        </li>
+        <li class="item" data-gp="9800000">
+          <svg viewBox="0 0 40 40" aria-hidden="true"><rect x="5" y="10" width="30" height="20" rx="2" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="14" cy="20" r="5" fill="var(--accent)"/><path d="M22 17h9M22 23h7" stroke="currentColor" stroke-width="2"/></svg>
+          <span class="name">Old School Bond</span><span class="price">9,800,000 gold</span><span class="was"></span>
+        </li>
+      </ul>
+      <p class="actions">
+        <button class="btn" id="show-usd">[ SHOW PRICES IN $ ]</button>
+        <span class="tip" id="usd-tip" role="status"></span>
+      </p>
+    </div>
+    <div id="usd-after" hidden>
+      <p class="turn">Every item you worked for now has a second price.</p>
+      <p>Once you've seen it, it doesn't go away.</p>
+      <details class="note">
+        <summary>A player said it first</summary>
+        <p>Under a video on game economies, one viewer made the same complaint about <i>RuneScape</i>'s Grand Exchange: once every item had a market price, items lost the sentimental value they used to have.</p>
+        <p class="cite">YouTube comment (paraphrased) on Game Maker's Toolkit, <a href="https://www.youtube.com/watch?v=Zrf1cou_yVo" target="_blank" rel="noopener">“How Video Game Economies are Designed”</a> (2022)</p>
+      </details>
+    </div>
+    <p class="shop-note">Grand Exchange prices from the OSRS Wiki, November 2026. Dollar prices use the Bond's rate: $9.99 for about 9.8 million gold.</p>
+  </div>
+</section>
+
+<div id="after-usd" hidden>
+
+<section class="screen" data-station="exchange" data-toc="One-way door">
+  <div class="text split">
+    <figure class="door" role="img" aria-label="A one-way door: dollars go in and become gold; there is no way to turn the gold back into dollars.">
+      <svg viewBox="0 0 240 120" aria-hidden="true">
+        <circle class="token" cx="30" cy="56" r="20"/><text class="token-lbl" x="30" y="57">$</text>
+        <rect class="frame" x="102" y="8" width="36" height="96"/>
+        <path class="leaf" d="M106 12 L130 18 L130 96 L106 100 Z"/>
+        <circle class="token gold" cx="210" cy="56" r="20"/><text class="token-lbl" x="210" y="57">gp</text>
+        <path class="flow" d="M56 40 H182"/><path class="head" d="M175 33 l8 7 -8 7"/>
+        <path class="flow blocked" d="M184 74 H58"/><path class="head blocked" d="M65 67 l-8 7 8 7"/>
+        <text class="x" x="120" y="75">✕</text>
+        <text class="side-lbl" x="30" y="100">DOLLARS</text><text class="side-lbl" x="210" y="100">GOLD</text>
+      </svg>
+      <figcaption>The Bond: one way in.</figcaption>
+    </figure>
+    <div>
+      <p>Notice which way the Bond works. Money goes in. Gold comes out.</p>
+      <p>You can turn dollars into gold. You can't officially turn gold back into dollars.</p>
+      <p class="turn">The counter takes your money. It never pays out.</p>
+      <p>Most games now work the same way. Premium currencies, gem shops, gacha pulls: almost all of them are one-way doors.</p>
+      <details class="note">
+        <summary>Other studios tried other counters</summary>
+        <p><i>Diablo III</i> let players sell loot to each other for real money, until Blizzard shut the auction house on 18 March 2014; the game, it admitted, had drifted away from its core: “kill monsters to get cool loot.” <i>World of Warcraft</i> copied the one-way design in 2015 with the WoW Token, “a secure, legitimate way to acquire gold.”</p>
+        <p class="cite"><a href="https://www.nbcnews.com/technolog/no-money-no-problems-blizzard-axes-diablo-3-auction-house-4B11192195" target="_blank" rel="noopener">NBC News</a> (2013); Warcraft Wiki, <a href="https://warcraft.wiki.gg/wiki/WoW_Token" target="_blank" rel="noopener">“WoW Token”</a></p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="screen" data-station="exchange" data-toc="Two-way door">
+  <div class="text wide">
+    <p class="display line-big">Second Life opened the door both ways.</p>
+    <p>Its currency, the Linden dollar, trades against the US dollar on Linden Lab's own exchange, the LindeX. Players buy Linden dollars, and they can sell them back.</p>
+    <p>So people work in Second Life. They build, design clothes, run clubs, perform. Some get paid in tips. Some cash out.</p>
+    <div class="doors">
+      <figure class="door small" role="img" aria-label="RuneScape's Bond: dollars in, nothing back out.">
+        <svg viewBox="0 0 240 120" aria-hidden="true">
+          <circle class="token" cx="30" cy="56" r="20"/><text class="token-lbl" x="30" y="57">$</text>
+          <rect class="frame" x="102" y="8" width="36" height="96"/>
+          <path class="leaf" d="M106 12 L130 18 L130 96 L106 100 Z"/>
+          <circle class="token gold" cx="210" cy="56" r="20"/><text class="token-lbl" x="210" y="57">gp</text>
+          <path class="flow" d="M56 40 H182"/><path class="head" d="M175 33 l8 7 -8 7"/>
+          <path class="flow blocked" d="M184 74 H58"/><path class="head blocked" d="M65 67 l-8 7 8 7"/>
+          <text class="x" x="120" y="75">✕</text>
+        </svg>
+        <figcaption><b>RuneScape · Bond</b>one way in</figcaption>
+      </figure>
+      <figure class="door small" role="img" aria-label="Second Life's LindeX: dollars in, Linden dollars back out to dollars.">
+        <svg viewBox="0 0 240 120" aria-hidden="true">
+          <circle class="token" cx="30" cy="56" r="20"/><text class="token-lbl" x="30" y="57">$</text>
+          <rect class="frame" x="102" y="8" width="36" height="96"/>
+          <path class="leaf open" d="M106 12 L122 22 L122 92 L106 100 Z"/>
+          <circle class="token gold" cx="210" cy="56" r="20"/><text class="token-lbl" x="210" y="57">L$</text>
+          <path class="flow" d="M56 40 H182"/><path class="head" d="M175 33 l8 7 -8 7"/>
+          <path class="flow" d="M184 74 H58"/><path class="head" d="M65 67 l-8 7 8 7"/>
+        </svg>
+        <figcaption><b>Second Life · LindeX</b>both ways</figcaption>
+      </figure>
+    </div>
+    <p class="turn">A one-way door keeps the money with the company. A two-way door lets players take it home.</p>
+    <aside class="source">
+      <span class="name">Source · Linden Lab</span>
+      Second Life Wiki, <a href="https://wiki.secondlife.com/wiki/Linden_Dollar" target="_blank" rel="noopener">“Linden Dollar”</a>; <a href="https://wiki.secondlife.com/wiki/LindeX" target="_blank" rel="noopener">“LindeX”</a>
+    </aside>
+  </div>
+</section>
+
+<section class="screen" data-station="exchange" data-toc="Every hour has a price">
+  <div class="text">
+    <p>Either way, something has changed. Once gold has a price in dollars, so does every hour spent earning it.</p>
+    <div class="panel hour-rate">
+      <svg class="hourglass" viewBox="0 0 40 60" aria-hidden="true">
+        <path d="M6 4h28M6 56h28" stroke="currentColor" stroke-width="3"/>
+        <path d="M9 4c0 14 9 18 9 26S9 42 9 56M31 4c0 14-9 18-9 26s9 12 9 26" fill="none" stroke="currentColor" stroke-width="2"/>
+        <path d="M13 12h14c-2 6-5 9-7 11-2-2-5-5-7-11z" fill="var(--accent)"/>
+        <path d="M11 54c2-8 6-11 9-11s7 3 9 11z" fill="var(--accent)"/>
+        <path class="sand" d="M20 24v19" stroke="var(--accent)" stroke-width="1.5"/>
+      </svg>
+      <div class="rate">
+        <span class="rate-label">ONE HOUR OF PLAY</span>
+        <span class="rate-num">$ ???</span>
+        <span class="rate-note">you'll clock in next chapter</span>
+      </div>
+    </div>
+    <p class="turn">And wherever an hour of play has a price, someone will be paid to play.</p>
+  </div>
+</section>
+
+<!-- ===================== CHAPTER 4: THE FALLOUT ===================== -->
+<!-- Two cases up front, one against the rules (Venezuela) and one built on them (Axie). Property and gambling wait behind their cards. -->
+
+<section class="screen chapter-head" id="ch-fallout" data-station="fallout" data-toc-chapter="The Fallout">
+  <div class="text">
+    <h2 class="display chapter-title">The Fallout</h2>
+    <p class="chapter-meta">
+      <span class="kicker">Chapter 4</span>
+      <span class="pips" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span>
+    </p>
+    <p class="chapter-sub">Who pays the price</p>
+  </div>
+</section>
+
+<section class="screen" data-station="fallout" data-toc="Four things follow">
+  <div class="text wide">
+    <p>Once gold can leave the game as money, the game starts leaking into real life.</p>
+    <p>Four things follow. Playing becomes <b>work</b>. Items become <b>property</b>. Chance becomes <b>gambling</b>. And gold becomes something to <b>bet on</b>.</p>
+    <ul class="fallout-cards">
+      <li class="lit"><span class="n">01</span><b>Work</b><span>Playing becomes work.</span><span class="tag">this chapter ▼</span></li>
+      <li><button class="card-btn" data-card="property" aria-expanded="false" aria-controls="card-detail"><span class="n">02</span><b>Property</b><span>Items become property.</span><span class="tag">open +</span></button></li>
+      <li><button class="card-btn" data-card="gambling" aria-expanded="false" aria-controls="card-detail"><span class="n">03</span><b>Gambling</b><span>Chance becomes gambling.</span><span class="tag">open +</span></button></li>
+      <li class="lit"><span class="n">04</span><b>Bet on</b><span>Gold becomes something to bet on.</span><span class="tag">this chapter ▼</span></li>
+    </ul>
+    <div class="card-detail" id="card-detail" aria-live="polite">
+      <div data-detail="property" hidden>
+        <p><b>Property.</b> If items are worth money, can they be stolen? In 2003, a Beijing court ruled that a player's stolen items in the online game <i>Red Moon</i> had real value, and ordered the company to restore them.</p>
+        <p class="cite">Pinsent Masons Out-Law, <a href="https://www.pinsentmasons.com/out-law/news/games-company-must-replace-players-virtual-weapons" target="_blank" rel="noopener">“Games company must replace player's virtual weapons”</a> (2004); 17173, <a href="https://news.17173.com/content/2003-12-21/n862_778343.html" target="_blank" rel="noopener" lang="zh">“全国首例虚拟财产案宣判”</a> (“China's first virtual property case decided”, in Chinese, 2003)</p>
+      </div>
+      <div data-detail="gambling" hidden>
+        <p><b>Gambling.</b> If items are worth money, a random reward is a bet. In 2016, Washington state ordered Valve to stop gambling sites using <i>CS:GO</i> skins, which had taken more than $1 billion in bets. In 2018, Belgium declared some loot boxes illegal gambling. A study of 7,422 gamers that year found that spending on loot boxes was linked to problem gambling, though it couldn't show which caused which.</p>
+        <p class="cite"><a href="https://www.engadget.com/2016-10-05-counter-strike-gambling-valve.html" target="_blank" rel="noopener">Engadget</a> (2016); <a href="https://igamingbusiness.com/casino-games/belgium-rules-video-game-loot-boxes-breach-gambling-laws/" target="_blank" rel="noopener">iGaming Business</a> (2018); Zendle &amp; Cairns, <a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0206767" target="_blank" rel="noopener">“Video game loot boxes are linked to problem gambling”</a> (2018)</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="screen" data-station="fallout" id="shift" data-toc="Work a shift">
+  <div class="text">
+    <p>Let's start with work. Here's a cow. Kill it. Collect the gold. Do it again.</p>
+    <p>You have 20 seconds.</p>
+    <div class="panel shift" id="shift-panel">
+      <div class="shift-top">
+        <span id="shift-clock">00:20</span>
+        <span class="shift-timer" aria-hidden="true"><span id="shift-bar"></span></span>
+        <span id="shift-tally">0 gold</span>
+      </div>
+      <div class="cow-pen">
+        <button class="cow" id="cow" disabled aria-label="Hit the cow">
+          <svg viewBox="0 0 120 80" aria-hidden="true">
+            <rect x="18" y="22" width="68" height="34" rx="6" fill="var(--panel)" stroke="currentColor" stroke-width="3"/>
+            <path d="M34 26c6 0 8 8 2 12s-10-2-8-8zM62 40c5-2 10 2 8 7s-9 4-10-1z" fill="currentColor"/>
+            <rect x="84" y="14" width="24" height="22" rx="4" fill="var(--panel)" stroke="currentColor" stroke-width="3"/>
+            <path d="M88 14l-4-7M104 14l4-7" stroke="currentColor" stroke-width="3"/>
+            <circle cx="100" cy="23" r="2.5" fill="currentColor"/>
+            <path d="M28 56v14M42 56v14M64 56v14M78 56v14M18 30l-8 14" stroke="currentColor" stroke-width="3"/>
+          </svg>
+        </button>
+        <span class="cow-hp" id="cow-hp" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <span class="drop-pop" id="drop-pop" aria-hidden="true"></span>
+      </div>
+      <p class="actions">
+        <button class="btn" id="shift-start">[ START SHIFT ]</button>
+        <button class="skip" id="shift-skip">skip</button>
+      </p>
+      <div class="shift-end" id="shift-end" hidden>
+        <p class="shift-over">Shift over. You earned <b id="shift-gold">0</b> gold. That's <b id="shift-usd">$0</b>.</p>
+        <p>At that pace, a 12-hour day would earn about <b id="shift-day">$0</b>.</p>
+        <p>Keep going? <i>11 hours, 59 minutes and 40 seconds left.</i></p>
+        <p class="actions"><button class="btn" id="clock-off">[ CLOCK OFF ]</button></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div id="after-shift" hidden>
+
+<section class="screen" data-station="fallout" data-toc="No clocking off">
+  <div class="text">
+    <p class="display line-big">For some players, there was no clocking off.</p>
+    <p>By 2017, Venezuela's currency had collapsed. Some Venezuelans found that farming gold in <i>Old School RuneScape</i> and selling it paid $15–20 a week, two to three times what many earned in a month.</p>
+    <div class="stats two">
+      <div class="stat"><span class="k">FARMING OSRS GOLD, 2017</span><span class="v">$15–20</span><span class="d">a week</span></div>
+      <div class="stat"><span class="k">YOUR SHIFT, KEPT UP FOR A WEEK</span><span class="v" id="your-week">$0</span><span class="d">12 hours a day, 7 days</span></div>
+    </div>
+    <blockquote class="quote">
+      “If they do not play, they do not eat that day.”
+      <cite>Kotaku, 2017</cite>
+    </blockquote>
+    <aside class="source">
+      <span class="name">Source · Kotaku 2017; Reason 2026</span>
+      <a href="https://kotaku.com/the-runescape-players-who-farm-gold-so-they-dont-starve-1819720013" target="_blank" rel="noopener">“The RuneScape Players Who Farm Gold So They Don't Starve To Death”</a>;
+      <a href="https://reason.com/2026/06/01/in-runescape-venezuelans-can-have-economic-freedom/" target="_blank" rel="noopener">“In RuneScape, Venezuelans Can Have Economic Freedom”</a>
+    </aside>
+    <details class="note">
+      <summary>A power cut on a price chart</summary>
+      <p>When Venezuela suffered a nationwide blackout in March 2019, trading in nature runes, a favourite item for these farmers, roughly halved. A country's power cut showed up on a game's price chart.</p>
+      <p class="cite">Reason (2026)</p>
+    </details>
+    <details class="note">
+      <summary>Two ways to tell the same story</summary>
+      <p>Kotaku's 2017 report told it as a story of hunger, and of other players hunting the farmers down. In 2026, the libertarian magazine <i>Reason</i> told it as a story of freedom: when the country's economy failed, the game's market still worked. “RuneScape gold became a more reliable store of value than local wages.”</p>
+      <p>Both agree on the facts. Reason also notes that the work broke Jagex's rules and could vanish overnight. Where they differ is where they look: at the players and the bans pushing farmers out of the game, or at the collapse that pushed them in.</p>
+      <p class="cite">Kotaku (2017); Hall &amp; Gray, <a href="https://reason.com/2026/06/01/in-runescape-venezuelans-can-have-economic-freedom/" target="_blank" rel="noopener">“In RuneScape, Venezuelans Can Have Economic Freedom”</a>, <i>Reason</i> (2026)</p>
+    </details>
+  </div>
+</section>
+
+<section class="screen" data-station="fallout" data-toc="Players argued" data-on-reveal="comments">
+  <div class="text">
+    <p>To other players, the farmers were a problem. They filled the best spots, pushed down prices, and broke the rules against selling gold. Jagex was banning around 10,000 accounts a day.</p>
+    <p>Players argued about it for years. Three comments from the same r/2007scape thread:</p>
+    <div class="chat thread" id="thread" aria-live="polite">
+      <p class="thread-head">r/2007scape · around 2020</p>
+    </div>
+    <aside class="source">
+      <span class="name">Source · Kotaku 2017; r/2007scape</span>
+      <a href="https://www.reddit.com/r/2007scape/s/Gb2U9sDPLn" target="_blank" rel="noopener">“We dont even need Jagex to fix rev caves…”</a>
+    </aside>
+    <details class="note">
+      <summary>Venezuela wasn't the first</summary>
+      <p>Around 2008, researcher Richard Heeks counted about 400,000 gold farmers worldwide, many of them in China, earning around $145 a month in a market worth at least $500 million a year. In 2007 <i>The New York Times Magazine</i> reported Chinese farmers earning about 30 cents an hour in <i>World of Warcraft</i>.</p>
+      <p class="cite">Heeks, <a href="https://hummedia.manchester.ac.uk/institutes/gdi/publications/workingpapers/di/di_wp32.pdf" target="_blank" rel="noopener">“Current Analysis and Future Research Agenda on ‘Gold Farming’”</a> (2008); Dibbell, <a href="https://archive-yaleglobal.yale.edu/node/39936" target="_blank" rel="noopener">“The Life of the Chinese Gold Farmer”</a> (2007)</p>
+    </details>
+  </div>
+</section>
+
+<section class="screen" data-station="fallout" data-toc="Play-to-earn">
+  <div class="text">
+    <p>Now flip it around. What if the game <i>wanted</i> to pay you?</p>
+    <p>By 2021, <i>Axie Infinity</i> was promising exactly that. Players bred and battled cartoon creatures, earned a token called SLP, and sold it for real money. They called it play-to-earn.</p>
+    <p>In the Philippines, during lockdown, it took off. Many players couldn't afford the creatures needed to start, so they borrowed them from “managers.” One manager took a 60% cut of his players' income.</p>
+    <p>Even players who kept everything they earned made about 450 pesos a day, just under the 470-peso minimum wage outside Manila.</p>
+    <div class="wage-bars" role="img" aria-label="Pesos a day: minimum wage outside Manila 470; Axie, keeping everything, 450; Axie after a 60% cut, about 180.">
+      <div class="wbar"><span class="lbl">Minimum wage, outside Manila</span><span class="track"><span class="fill" style="--w:100%"></span></span><span class="num">₱470</span></div>
+      <div class="wbar"><span class="lbl">Axie, keeping everything</span><span class="track"><span class="fill" style="--w:95.7%"></span></span><span class="num">₱450</span></div>
+      <div class="wbar cut"><span class="lbl">Axie, after a 60% cut</span><span class="track"><span class="fill" style="--w:38.3%"></span></span><span class="num">≈₱180</span></div>
+    </div>
+    <aside class="source">
+      <span class="name">Source · Context / Thomson Reuters Foundation, 2023</span>
+      <a href="https://www.context.news/big-tech/stung-by-losses-filipino-players-ditch-axie-infinity-crypto-game" target="_blank" rel="noopener">“Stung by losses, Filipino players ditch Axie Infinity”</a>
+    </aside>
+  </div>
+</section>
+
+<section class="screen" data-station="fallout" data-toc="The crash" data-on-reveal="slp">
+  <div class="text">
+    <p>Play-to-earn only works while new players keep buying in.</p>
+    <p>In March 2022, hackers stole about $615 million from the network behind Axie. SLP lost 99% of its value. Daily players fell from 2.7 million to around 250,000.</p>
+    <figure class="panel slp" role="img" aria-label="The shape of SLP's price: a peak in February 2022, then a fall of 99%.">
+      <p class="slp-head"><span>SLP PRICE · SHAPE ONLY</span><span class="down">−99%</span></p>
+      <svg viewBox="0 0 300 100" preserveAspectRatio="none" aria-hidden="true">
+        <polyline class="slp-line" points="0,72 40,62 75,40 108,8 135,28 170,52 210,78 260,91 300,95"/>
+      </svg>
+      <p class="slp-foot"><span>2021</span><span class="peak">peak · Feb 2022</span><span>2023</span></p>
+    </figure>
+    <p class="turn">The players who had borrowed to play were left holding a token worth almost nothing.</p>
+    <aside class="source">
+      <span class="name">Source · Context / Thomson Reuters Foundation, 2023</span>
+      <a href="https://www.context.news/big-tech/stung-by-losses-filipino-players-ditch-axie-infinity-crypto-game" target="_blank" rel="noopener">“Stung by losses, Filipino players ditch Axie Infinity”</a>
+    </aside>
+  </div>
+</section>
+
+<section class="screen" data-station="fallout" data-toc="Gaming is there first">
+  <div class="text">
+    <p>Two stories, one promise: play, and get paid.</p>
+    <p>In <i>RuneScape</i>, players broke the rules to earn. In <i>Axie</i>, earning <i>was</i> the rule. Either way, when the money ran out, the loss didn't land on the central bank. It landed on the players.</p>
+    <p>And the real economy is taking notes. A banker friend of our lecturer once sat through a five-day presentation at work on how to turn video games' most successful strategies into financial products.</p>
+    <blockquote class="quote big">
+      “Gaming is there first.”
+      <cite>CCDP10003 lecture</cite>
+    </blockquote>
+    <p class="turn">Your pouch has been part of the experiment. Time to check it.</p>
+  </div>
+</section>
+
+<!-- ===================== CHAPTER 5: THE BILL ===================== -->
+<!-- Reaching this chapter moves the page into the receipt phase. The receipt prints from what the reader did. -->
+
+<section class="screen chapter-head" id="ch-bill" data-station="bill" data-toc-chapter="The Bill" data-on-reveal="receipt">
+  <div class="text">
+    <h2 class="display chapter-title">The Bill</h2>
+    <p class="chapter-meta">
+      <span class="kicker">Chapter 5</span>
+      <span class="pips" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span>
+    </p>
+    <p class="chapter-sub">What your gold is worth</p>
+  </div>
+</section>
+
+<section class="screen" data-station="bill" id="receipt-screen" data-toc="The receipt" data-on-reveal="print">
+  <div class="text">
+    <div class="receipt" id="receipt" aria-live="polite">
+      <p class="receipt-title">RECEIPT · WHO PRINTS YOUR GOLD?</p>
+      <ol class="receipt-lines" id="receipt-lines"></ol>
+      <p class="receipt-total"><span>TOTAL</span><span id="receipt-total">…</span></p>
+      <p class="receipt-total usd"><span>IN US DOLLARS</span><span id="receipt-usd">$ ???</span></p>
+      <p class="receipt-actions"><button class="btn" id="reveal" disabled>[ REVEAL ]</button></p>
+    </div>
+  </div>
+</section>
+
+<div id="after-reveal" hidden>
+
+<section class="screen" data-station="bill" data-toc="About one dollar">
+  <div class="text">
+    <p class="display line-big">About one dollar.</p>
+    <p>That's the going rate: a $9.99 Bond buys about 9.8 million gold, so your pouch is worth roughly what you'd pay for a bottle of water.</p>
+    <div class="stats compare">
+      <div class="stat"><span class="k">YOUR POUCH</span><span class="v" id="pouch-worth">≈ $1</span><span class="d">at the Bond's rate</span></div>
+      <div class="stat"><span class="k">A FARMER'S DAY, VENEZUELA 2017</span><span class="v">≈ $2–3</span><span class="d">$15–20 a week</span></div>
+    </div>
+    <p class="turn">To you, maybe nothing. To a gold farmer in Venezuela in 2017, it was up to half a day's pay.</p>
+    <aside class="source">
+      <span class="name">Source · OSRS Wiki; Kotaku 2017</span>
+      <a href="https://oldschool.runescape.wiki/w/Old_school_bond" target="_blank" rel="noopener">“Old school bond”</a>;
+      <a href="https://kotaku.com/the-runescape-players-who-farm-gold-so-they-dont-starve-1819720013" target="_blank" rel="noopener">“The RuneScape Players Who Farm Gold So They Don't Starve To Death”</a>
+    </aside>
+  </div>
+</section>
+
+<section class="screen" data-station="bill" data-toc="Who prints your gold?">
+  <div class="text">
+    <p>Look at that number again. You didn't set it. Neither did a government.</p>
+    <p>It was set through a counter run by the same company that prints the gold, makes the rules, and decides who gets banned.</p>
+    <p class="display line-big">So, who prints your gold?</p>
+    <p>A studio. One that is also</p>
+    <ul class="stamps">
+      <li>a central bank</li>
+      <li>a lawmaker</li>
+      <li>a police force</li>
+      <li>a currency exchange</li>
+    </ul>
+    <p class="turn">Players almost never get a vote.</p>
+  </div>
+</section>
+
+<!-- 5.4 is written by the author. Replace the placeholder below with the final text (150–250 words, first person). -->
+<section class="screen" data-station="bill" data-toc="My take">
+  <div class="text">
+    <p class="kicker">My take</p>
+    <div class="my-take placeholder">
+      <p class="draft-tag">DRAFT · to be written by the author</p>
+      <p>[ My own position goes here: first person, 150–250 words, one idea at a time. ]</p>
+    </div>
+  </div>
+</section>
+
+<section class="screen" data-station="bill" data-toc="Your turn">
+  <div class="text">
+    <p>That's my answer. Before you go, what's yours?</p>
+    <p class="display line-big">Should the gold you earn in a game be something you can turn into real money?</p>
+    <div class="choices one" id="your-turn">
+      <button class="btn" data-turn="no">No. Keep games and money apart.</button>
+      <button class="btn" data-turn="one">One way only, like the Bond.</button>
+      <button class="btn" data-turn="both">Both ways, like Second Life.</button>
+    </div>
+    <div class="turn-cost" aria-live="polite">
+      <p data-cost="no" hidden><i>No:</i> Then someone else will sell it anyway, like the gold farmers did.</p>
+      <p data-cost="one" hidden><i>One way:</i> Then the company runs the counter, and sets the rate.</p>
+      <p data-cost="both" hidden><i>Both ways:</i> Then every hour you play has a price, and someone will need that money more than you do.</p>
+    </div>
+  </div>
+</section>
+
+<section class="screen logout-screen" data-station="bill" id="logout" data-toc="Log out">
+  <div class="text">
+    <p class="display line-big">Every coin in that pouch was printed by someone.</p>
+    <p class="display line-big">Now you know who.</p>
+    <p class="actions"><button class="btn" id="logout-btn">[ LOG OUT ]</button></p>
+    <p class="logout-after" id="logout-after" hidden>Logged out. Sources and credits are below. ▼</p>
+  </div>
+</section>
+
+<section class="screen sources-screen" data-station="bill" id="sources" data-toc="Sources &amp; credits">
+  <div class="text wide">
+    <h2 class="kicker">Sources &amp; credits</h2>
+    <p class="muted">Every source is also cited where it's used. Reddit users are quoted without usernames.</p>
+
+    <h3>The Mint</h3>
+    <ul class="refs">
+      <li>Castronova, E. (2001) <a href="https://www.ifo.de/DocDL/cesifo_wp618.pdf" target="_blank" rel="noopener">“Virtual Worlds: A First-Hand Account of Market and Society on the Cyberian Frontier”</a>. CESifo Working Paper No. 618.</li>
+      <li>Game Maker's Toolkit (2022) <a href="https://www.youtube.com/watch?v=Zrf1cou_yVo" target="_blank" rel="noopener">“How Video Game Economies are Designed”</a>. YouTube.</li>
+      <li>Heeks, R. (2008) <a href="https://hummedia.manchester.ac.uk/institutes/gdi/publications/workingpapers/di/di_wp32.pdf" target="_blank" rel="noopener">“Current Analysis and Future Research Agenda on ‘Gold Farming’”</a>. University of Manchester.</li>
+      <li>Koster, R. (2002) <a href="https://www.raphkoster.com/?p=16263" target="_blank" rel="noopener">“The evolution of UO's economy”</a>.</li>
+      <li>Simpson, Z. B. (1999) <a href="https://gwern.net/doc/economics/1999-04-07-simpson-theingameconomicsofultimaonline.html" target="_blank" rel="noopener">“The In-game Economics of Ultima Online”</a>.</li>
+    </ul>
+
+    <h3>The Central Bank</h3>
+    <ul class="refs">
+      <li>CCP (2007) <a href="https://community.eveonline.com/news/news-channels/press-releases/eve-online-appoints-in-world-economist-1" target="_blank" rel="noopener">“EVE Online Appoints In-World Economist”</a>.</li>
+      <li>Jagex (2011) <a href="https://secure.runescape.com/m=news/the-wilderness-and-free-trade-will-return" target="_blank" rel="noopener">“The Wilderness and Free Trade will return”</a>.</li>
+      <li>Josh Strife Hayes, <a href="https://www.youtube.com/watch?v=g16heGLKlTA" target="_blank" rel="noopener">“What Went Wrong with Gaming?”</a>. YouTube.</li>
+      <li>Madden (2006) <a href="https://minneapolisfed.org/article/2006/synthetic-worlds-the-business-and-culture-of-online-games" target="_blank" rel="noopener">review of Castronova, <i>Synthetic Worlds</i> (2005)</a>. Federal Reserve Bank of Minneapolis.</li>
+      <li>Old School RuneScape Wiki, <a href="https://oldschool.runescape.wiki/w/Old_School_RuneScape" target="_blank" rel="noopener">“Old School RuneScape”</a>.</li>
+      <li>r/2007scape (around 2022) <a href="https://www.reddit.com/r/2007scape/s/wzKE4EXrCC" target="_blank" rel="noopener">“Jagex 2019/2020 Financial Report Analysis”</a>.</li>
+      <li>RuneScape Wiki, <a href="https://runescape.wiki/w/Update:Trade_and_Drop_Changes" target="_blank" rel="noopener">“Update:Trade and Drop Changes”</a> (2007); <a href="https://runescape.wiki/w/Wilderness_and_Free_Trade_Vote" target="_blank" rel="noopener">“Wilderness and Free Trade Vote”</a> (2011); <a href="https://runescape.wiki/w/Update:Anti-Gold-Farming_Measures" target="_blank" rel="noopener">“Update:Anti-Gold-Farming Measures”</a> (2011).</li>
+    </ul>
+
+    <h3>The Exchange</h3>
+    <ul class="refs">
+      <li>Jagex (2013) <a href="https://runescape.wiki/w/Update:Blog_-_An_outline_of_the_impact_of_RuneScape_Bonds" target="_blank" rel="noopener">“An outline of the impact of RuneScape Bonds”</a>. RuneScape Wiki archive.</li>
+      <li>NBC News (2013) <a href="https://www.nbcnews.com/technolog/no-money-no-problems-blizzard-axes-diablo-3-auction-house-4B11192195" target="_blank" rel="noopener">“No money, no problems: Blizzard axes ‘Diablo 3’ auction house”</a>.</li>
+      <li>Old School RuneScape Wiki, <a href="https://oldschool.runescape.wiki/w/Old_school_bond" target="_blank" rel="noopener">“Old school bond”</a>; <a href="https://oldschool.runescape.wiki/w/Update:Membership_%26_Bonds_Price_Change" target="_blank" rel="noopener">“Update:Membership &amp; Bonds Price Change”</a> (2026); <a href="https://prices.runescape.wiki/osrs/" target="_blank" rel="noopener">Grand Exchange prices</a> (November 2026).</li>
+      <li>Second Life Wiki, <a href="https://wiki.secondlife.com/wiki/Linden_Dollar" target="_blank" rel="noopener">“Linden Dollar”</a>; <a href="https://wiki.secondlife.com/wiki/LindeX" target="_blank" rel="noopener">“LindeX”</a>.</li>
+      <li>Warcraft Wiki, <a href="https://warcraft.wiki.gg/wiki/WoW_Token" target="_blank" rel="noopener">“WoW Token”</a>.</li>
+      <li>A YouTube comment on Game Maker's Toolkit's video above (paraphrased).</li>
+    </ul>
+
+    <h3>The Fallout</h3>
+    <ul class="refs">
+      <li>17173 (2003) <a href="https://news.17173.com/content/2003-12-21/n862_778343.html" target="_blank" rel="noopener" lang="zh">“全国首例虚拟财产案宣判”</a> (“China's first virtual property case decided”, in Chinese).</li>
+      <li>Context / Thomson Reuters Foundation (2023) <a href="https://www.context.news/big-tech/stung-by-losses-filipino-players-ditch-axie-infinity-crypto-game" target="_blank" rel="noopener">“Stung by losses, Filipino players ditch Axie Infinity”</a>.</li>
+      <li>Dibbell, J. (2007) <a href="https://archive-yaleglobal.yale.edu/node/39936" target="_blank" rel="noopener">“The Life of the Chinese Gold Farmer”</a>. <i>The New York Times Magazine</i>, via YaleGlobal.</li>
+      <li>Engadget (2016) <a href="https://www.engadget.com/2016-10-05-counter-strike-gambling-valve.html" target="_blank" rel="noopener">“Washington state orders Valve to end ‘Counter-Strike’ gambling”</a>.</li>
+      <li>Hall, K. &amp; Gray, M. N. (2026) <a href="https://reason.com/2026/06/01/in-runescape-venezuelans-can-have-economic-freedom/" target="_blank" rel="noopener">“In RuneScape, Venezuelans Can Have Economic Freedom”</a>. <i>Reason</i>.</li>
+      <li>iGaming Business (2018) <a href="https://igamingbusiness.com/casino-games/belgium-rules-video-game-loot-boxes-breach-gambling-laws/" target="_blank" rel="noopener">“Belgium rules video game loot boxes breach gambling laws”</a>.</li>
+      <li>Kotaku (2017) <a href="https://kotaku.com/the-runescape-players-who-farm-gold-so-they-dont-starve-1819720013" target="_blank" rel="noopener">“The RuneScape Players Who Farm Gold So They Don't Starve To Death”</a>.</li>
+      <li>Pinsent Masons Out-Law (2004) <a href="https://www.pinsentmasons.com/out-law/news/games-company-must-replace-players-virtual-weapons" target="_blank" rel="noopener">“Games company must replace player's virtual weapons”</a>.</li>
+      <li>r/2007scape (around 2020) <a href="https://www.reddit.com/r/2007scape/s/Gb2U9sDPLn" target="_blank" rel="noopener">“We dont even need Jagex to fix rev caves…”</a>.</li>
+      <li>Zendle, D. &amp; Cairns, P. (2018) <a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0206767" target="_blank" rel="noopener">“Video game loot boxes are linked to problem gambling”</a>. <i>PLOS ONE</i>.</li>
+    </ul>
+
+    <h3>Course</h3>
+    <ul class="refs">
+      <li>CCDP10003 Exploring Gaming Culture, lectures on game economies and monetization, on Project 2, and on <i>That Dragon, Cancer</i>.</li>
+    </ul>
+
+    <h3>Credits</h3>
+    <ul class="refs">
+      <li>Fonts: Fraunces, IBM Plex Mono, Silkscreen and Source Serif 4, via Google Fonts.</li>
+      <li>Every icon and diagram on this page was drawn for it. No game art is used.</li>
+      <li>The page has no server and collects nothing. Your choices stay in your browser and are gone when you leave.</li>
+    </ul>
+
+    <!-- Final wording to be agreed before publishing (step 7). -->
+    <h3>Use of AI</h3>
+    <div class="ai-note">
+      <p class="draft-tag">DRAFT · confirm before publishing</p>
+      <p>This project used AI (Claude, by Anthropic), as the course allows. It helped to gather and check sources, draft the English text from my outline, and write the code for this page. The topic, the choice of cases, every edit, and the stance in “My take” are my own.</p>
+    </div>
+
+    <p class="login-again"><a href="./" id="login-again">↺ Log in again</a></p>
+  </div>
+</section>
+
+</div><!-- /after-reveal -->
+
+</div><!-- /after-shift -->
+
+</div><!-- /after-usd -->
+
+</div><!-- /after-vote -->
+</div><!-- /after-send -->
+</div><!-- /after-crisis -->
+
+</div><!-- /after-collect -->
+</main>
+
+<div class="fade-cover" id="fade-cover" aria-hidden="true"></div>
+
+<script src="js/main.js"></script>
+</body>
+</html>

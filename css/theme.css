@@ -1,0 +1,256 @@
+/* Who Prints Your Gold? — shared theme.
+   The page has three phases. body[data-phase] switches between them, one way only:
+   game (prologue–ch2) → paper (after the $ toggle in ch3) → receipt (the bill). */
+
+:root {
+  --font-display: "Silkscreen", monospace;
+  --font-body: "Source Serif 4", Georgia, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --bg: #1b1712;
+  --panel: #2b241b;
+  --edge-light: #6b5838;
+  --edge-dark: #120f0b;
+  --ink: #e8dcc0;
+  --muted: #a8957a;
+  --accent: #f2c94c;
+  --alert: #ff6b6b;
+  --chat: #f4e04d;
+  --chat-name: #7fd1ff;
+  --source-name: #ff9f1c;
+  --display-shadow: 3px 3px 0 #000;
+
+  --measure: 34rem;
+  --phase-time: 2.4s;
+}
+
+body[data-phase="paper"] {
+  --font-display: "Fraunces", Georgia, serif;
+  --bg: #f3efe2;
+  --panel: rgba(255, 255, 255, .45);
+  --edge-light: #1f4d3a;
+  --edge-dark: #1f4d3a;
+  --ink: #1f3a2e;
+  --muted: #5f6f66;
+  --accent: #b08a2e;
+  --alert: #9b2c2c;
+  --chat: #1f3a2e;
+  --chat-name: #1f4d3a;
+  --source-name: #9b2c2c;
+  --display-shadow: none;
+}
+
+body[data-phase="receipt"] {
+  --font-display: "IBM Plex Mono", ui-monospace, monospace;
+  --bg: #fbfaf6;
+  --panel: #fff;
+  --edge-light: #111;
+  --edge-dark: #111;
+  --ink: #111;
+  --muted: #666;
+  --accent: #111;
+  --alert: #b00020;
+  --chat: #111;
+  --chat-name: #111;
+  --source-name: #111;
+  --display-shadow: none;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 1.1875rem;
+  line-height: 1.6;
+  transition: background-color var(--phase-time) ease, color var(--phase-time) ease;
+}
+
+/* The paper phase gets a faint engraved pattern, like a banknote. */
+body[data-phase="paper"] {
+  background-image: repeating-radial-gradient(circle at 85% 20%, rgba(31, 77, 58, .05) 0 1px, transparent 1px 9px);
+  background-attachment: fixed;
+}
+
+/* ---------- layout ---------- */
+
+.screen {
+  min-height: 100vh;
+  padding: 11vh 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.text { max-width: var(--measure); margin: 0 auto; width: 100%; }
+.text p { margin: 0 0 1rem; }
+
+.display {
+  font-family: var(--font-display);
+  color: var(--accent);
+  text-shadow: var(--display-shadow);
+  line-height: 1.1;
+  margin: 0 0 1.5rem;
+}
+
+.chapter-title { font-size: clamp(2rem, 6vw, 3.25rem); }
+
+/* ---------- buttons ---------- */
+
+.btn {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  color: var(--accent);
+  background: var(--panel);
+  border: 3px solid;
+  border-color: var(--edge-light) var(--edge-dark) var(--edge-dark) var(--edge-light);
+  padding: .6rem 1.4rem;
+  cursor: pointer;
+}
+.btn:hover:not(:disabled) { filter: brightness(1.2); }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+
+body[data-phase="paper"] .btn,
+body[data-phase="receipt"] .btn {
+  font-family: var(--font-mono);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  font-size: .85rem;
+  color: var(--bg);
+  background: var(--edge-light);
+  border: 0;
+  outline: 1px solid var(--edge-light);
+  outline-offset: 3px;
+}
+
+.skip {
+  font-family: var(--font-mono);
+  font-size: .8rem;
+  color: var(--muted);
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ---------- panels, chat, alerts ---------- */
+
+.panel {
+  background: var(--panel);
+  border: 3px solid;
+  border-color: var(--edge-light) var(--edge-dark) var(--edge-dark) var(--edge-light);
+  padding: 1rem 1.25rem;
+}
+body[data-phase="paper"] .panel,
+body[data-phase="receipt"] .panel { border: 1px solid var(--edge-light); }
+
+.chat {
+  font-family: var(--font-mono);
+  font-size: .85rem;
+  line-height: 1.7;
+  color: var(--chat);
+  background: rgba(0, 0, 0, .35);
+  padding: .5rem .75rem;
+}
+.chat .who { color: var(--chat-name); }
+body[data-phase="paper"] .chat { background: rgba(31, 77, 58, .06); }
+
+.alert { font-family: var(--font-mono); font-size: .9rem; color: var(--alert); }
+
+/* ---------- source cards and notes ---------- */
+
+.source {
+  font-size: .9rem;
+  line-height: 1.5;
+  background: rgba(0, 0, 0, .45);
+  border: 1px solid var(--edge-light);
+  padding: .6rem .8rem;
+  margin: 1.25rem 0;
+}
+.source .name {
+  display: block;
+  font-family: var(--font-display);
+  font-size: .8rem;
+  color: var(--source-name);
+}
+body[data-phase="paper"] .source {
+  background: none;
+  border: 0;
+  border-left: 3px solid var(--alert);
+  padding: .2rem 0 .2rem .9rem;
+}
+body[data-phase="paper"] .source .name {
+  font-family: var(--font-mono);
+  font-size: .7rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+body[data-phase="receipt"] .source {
+  background: none;
+  border: 0;
+  border-top: 1px dashed #999;
+  font-family: var(--font-mono);
+  font-size: .8rem;
+}
+
+details.note { margin: 1rem 0; font-size: .95rem; }
+details.note summary {
+  font-family: var(--font-mono);
+  font-size: .8rem;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+blockquote.quote { margin: 1.5rem 0; font-style: italic; }
+blockquote.quote cite { display: block; font-style: normal; font-size: .85rem; color: var(--muted); margin-top: .4rem; }
+
+/* ---------- the pouch (always visible) ---------- */
+
+.pouch {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 10;
+  min-width: 11rem;
+  font-family: var(--font-display);
+  background: var(--panel);
+  border: 3px solid;
+  border-color: var(--edge-light) var(--edge-dark) var(--edge-dark) var(--edge-light);
+  padding: .5rem .8rem;
+  transition: background-color var(--phase-time), color var(--phase-time);
+}
+.pouch .label { font-size: .65rem; color: var(--muted); display: block; }
+.pouch .amount { font-size: 1.3rem; color: var(--accent); font-variant-numeric: tabular-nums; }
+.pouch .sub { display: block; font-family: var(--font-mono); font-size: .7rem; color: var(--muted); }
+.pouch .usd { display: block; font-family: var(--font-mono); font-size: .8rem; color: var(--muted); }
+.pouch.locked { border-color: var(--alert); }
+.pouch.locked .amount::before { content: "\1F512  "; font-size: .9rem; }
+body[data-phase="paper"] .pouch { border: 1px solid var(--edge-light); outline: 1px dashed var(--edge-light); outline-offset: -5px; }
+body[data-phase="receipt"] .pouch { border: 1px solid #111; font-family: var(--font-mono); }
+
+/* On phones the pouch becomes a bar at the bottom, inside thumb reach. */
+@media (max-width: 640px) {
+  body { font-size: 1.0625rem; }
+  .screen { padding: 14vh 1.25rem; }
+  .pouch {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: baseline;
+    gap: .75rem;
+    border-width: 3px 0 0 0;
+    padding: .5rem 1rem calc(.5rem + env(safe-area-inset-bottom));
+  }
+  .pouch .label { display: none; }
+  body { padding-bottom: 4rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --phase-time: 0s; }
+  * { animation: none !important; transition: none !important; }
+}
