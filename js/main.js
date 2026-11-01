@@ -625,7 +625,7 @@
   // One click turns every price into dollars at the Bond's rate and moves the page into the paper phase.
   // The button stays, greyed out: clicking it again only says you can't go back.
 
-  const BOND_GOLD = 9800000;
+  const BOND_GOLD = 9559197;
   const BOND_USD = 9.99;
   const usd = (gold) => {
     const v = (gold * BOND_USD) / BOND_GOLD;
