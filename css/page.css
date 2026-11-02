@@ -647,6 +647,15 @@ html.free-scroll { scroll-snap-type: none; }
 /* Six screens, each a step label, one headline and one picture. */
 
 .take-step { color: var(--alert); }
+
+/* End of the story: the four chapters in one table, studio's move against players' answer. */
+.story-end { color: var(--ink); letter-spacing: .2em; }
+.relation { list-style: none; margin: 1.25rem 0; padding: 0; border-top: 1px solid var(--edge-light); }
+.relation li { display: grid; grid-template-columns: 10rem 1fr 1fr; gap: 1rem; align-items: baseline; padding: .55rem 0; border-bottom: 1px dashed var(--edge-light); font-size: 1rem; line-height: 1.4; }
+.relation b { font-family: var(--font-mono); font-size: .8rem; letter-spacing: .08em; text-transform: uppercase; font-weight: 600; }
+.relation li span:nth-child(2) { color: var(--alert); }
+.relation .relation-head { border-bottom: 1px solid var(--edge-light); padding: .35rem 0; }
+.relation .relation-head span { font-family: var(--font-mono); font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted) !important; }
 .text.wide > .display.line-big { margin-top: .2rem !important; }
 
 .rivals-wrap { display: grid; grid-template-columns: 20rem 1fr; gap: 2rem; align-items: center; margin-top: 1rem; }
@@ -799,6 +808,9 @@ details.note .cite { font-size: .85rem; color: var(--muted); }
   .race .vs { justify-self: center; }
   .door-card .door.small { max-width: 13rem; }
   .losers { grid-template-columns: 1fr 1fr; }
+  .relation li { grid-template-columns: 1fr 1fr; gap: .2rem .75rem; }
+  .relation li b { grid-column: 1 / -1; }
+  .relation .relation-head span:first-child { display: none; }
 }
 
 @media (max-width: 640px) {

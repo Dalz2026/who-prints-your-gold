@@ -186,7 +186,7 @@
     const station = head.dataset.station;
     const li = document.createElement("li");
     li.dataset.station = station;
-    li.appendChild(tocLink(head, head.dataset.tocChapter, i === 0 ? "·" : String(i)));
+    li.appendChild(tocLink(head, head.dataset.tocChapter, head.dataset.tocNum ?? (i === 0 ? "·" : String(i))));
     const screens = document.querySelectorAll(`main section[data-toc][data-station="${station}"]`);
     if (screens.length) {
       const ol = document.createElement("ol");

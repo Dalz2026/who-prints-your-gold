@@ -12,8 +12,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700&family=IBM+Plex+Mono:wght@400;600&family=Silkscreen&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/theme.css?v=6">
-<link rel="stylesheet" href="css/page.css?v=6">
+<link rel="stylesheet" href="css/theme.css?v=7">
+<link rel="stylesheet" href="css/page.css?v=7">
 </head>
 <body data-phase="game">
 
@@ -817,8 +817,33 @@
   </div>
 </section>
 
-<!-- My take: the author's own position, translated from their Chinese draft. Six screens, one claim each. -->
-<section class="screen" data-station="bill" data-toc="My take">
+<!-- The story ends here: one look back at the four chapters before the author's own view. -->
+<section class="screen" data-station="bill" data-toc="End of the story">
+  <div class="text wide">
+    <p class="kicker story-end">*** End of the story ***</p>
+    <p class="display line-big">Four chapters, one relationship.</p>
+    <ol class="relation">
+      <li class="relation-head" aria-hidden="true"><span></span><span>The studio</span><span>Players</span></li>
+      <li><b>The Mint</b><span>prints the money</span><span>feel it in the prices</span></li>
+      <li><b>The Leash</b><span>slows the game down to sell time</span><span>grind, pay, or buy from a seller</span></li>
+      <li><b>The Tug of War</b><span>blocks trading for everyone</span><span>push back, and win a vote</span></li>
+      <li><b>The Exchange</b><span>puts a price on gold</span><span>choose whose counter to use</span></li>
+    </ol>
+    <p>They need each other: a studio without players has no game, and players without a studio have no world. But they want different things from the same gold. The studio holds the rules. Players hold the one thing it can't print: their time, and whether they stay.</p>
+    <p class="turn">That was the story. What follows is my own view, and it's about the grey market today.</p>
+  </div>
+</section>
+
+<section class="screen chapter-head" id="ch-take" data-station="take" data-toc-chapter="My take" data-toc-num="·">
+  <div class="text">
+    <h2 class="display chapter-title">My take</h2>
+    <p class="chapter-meta"><span class="kicker">After the story</span></p>
+    <p class="chapter-sub">The grey market, then and now</p>
+  </div>
+</section>
+
+<!-- My take: the author's own position, translated from their Chinese draft. Seven screens, one claim each. -->
+<section class="screen" data-station="take" data-toc="The common enemy">
   <div class="text wide">
     <p class="kicker take-step">My take · 1 / 7 · The common enemy</p>
     <p class="display line-big">Two rivals. One common enemy.</p>
@@ -844,7 +869,7 @@
   </div>
 </section>
 
-<section class="screen" data-station="bill">
+<section class="screen" data-station="take">
   <div class="text wide">
     <p class="kicker take-step">My take · 2 / 7 · Then and now</p>
     <p class="display line-big">The grey market grew up.</p>
@@ -863,7 +888,7 @@
   </div>
 </section>
 
-<section class="screen" data-station="bill">
+<section class="screen" data-station="take" data-toc="Three doors">
   <div class="text wide">
     <p class="kicker take-step">My take · 3 / 7 · Door one</p>
     <p class="display line-big">Keep the door shut.</p>
@@ -895,7 +920,7 @@
   </div>
 </section>
 
-<section class="screen" data-station="bill">
+<section class="screen" data-station="take">
   <div class="text wide">
     <p class="kicker take-step">My take · 4 / 7 · Door two</p>
     <p class="display line-big">Open it one way.</p>
@@ -927,7 +952,7 @@
   </div>
 </section>
 
-<section class="screen" data-station="bill">
+<section class="screen" data-station="take">
   <div class="text wide">
     <p class="kicker take-step">My take · 5 / 7 · Door three</p>
     <p class="display line-big">Open it both ways.</p>
@@ -958,7 +983,7 @@
   </div>
 </section>
 
-<section class="screen" data-station="bill">
+<section class="screen" data-station="take" data-toc="A race of costs">
   <div class="text wide">
     <p class="kicker take-step">My take · 6 / 7 · All three doors</p>
     <p class="display line-big">Every door: a race of costs.</p>
@@ -984,7 +1009,7 @@
   </div>
 </section>
 
-<section class="screen" data-station="bill">
+<section class="screen" data-station="take" data-toc="Who loses">
   <div class="text wide">
     <p class="kicker take-step">My take · 7 / 7 · Who loses</p>
     <p>Whatever the door, a game stays healthy only while its players stay. The grey market lives off that health, and spends the game's future for its own gain.</p>
@@ -998,7 +1023,7 @@
   </div>
 </section>
 
-<section class="screen" data-station="bill" data-toc="Your turn">
+<section class="screen" data-station="take" data-toc="Your turn">
   <div class="text">
     <p>That's my answer. But the grey market only survives because it has customers, and its customers are players. In 2013, more than four in ten of <i>RuneScape</i>'s active players had bought from it.</p>
     <p class="display line-big">Would you buy gold from the grey market?</p>
@@ -1007,7 +1032,7 @@
   </div>
 </section>
 
-<section class="screen logout-screen" data-station="bill" id="logout" data-toc="Log out">
+<section class="screen logout-screen" data-station="take" id="logout" data-toc="Log out">
   <div class="text">
     <p class="display line-big">Every coin in that pouch was printed by someone.</p>
     <p class="actions"><button class="btn" id="logout-btn">[ LOG OUT ]</button></p>
@@ -1015,7 +1040,7 @@
   </div>
 </section>
 
-<section class="screen sources-screen" data-station="bill" id="sources" data-toc="Sources &amp; credits">
+<section class="screen sources-screen" data-station="take" id="sources" data-toc="Sources &amp; credits">
   <div class="text wide">
     <h2 class="kicker">Sources &amp; credits</h2>
     <p class="muted">Every source is also cited where it's used. Reddit users are quoted without usernames.</p>
@@ -1090,6 +1115,6 @@
 
 <div class="fade-cover" id="fade-cover" aria-hidden="true"></div>
 
-<script src="js/main.js?v=6"></script>
+<script src="js/main.js?v=7"></script>
 </body>
 </html>
