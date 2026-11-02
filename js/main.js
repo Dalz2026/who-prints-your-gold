@@ -1,5 +1,7 @@
 // Who Prints Your Gold? — page logic.
-// Everything the reader does is kept in `state`, so the receipt at the end can print it.
+// The reader plays one player all the way through. In each chapter the studio makes a move on the
+// player's gold, and from chapter 2 the reader answers it. Every move goes into the ledger; the pouch,
+// the receipt and the ending are all read from the ledger, so they can't disagree.
 
 (() => {
   document.documentElement.classList.add("js");
@@ -12,40 +14,78 @@
 
   const START_GOLD = 1000000;
   const SWORD_START_PRICE = 100;
+  const BOND_GOLD = 9559197;
+  const BOND_USD = 9.99;
 
   const state = {
     gold: 0,
     collected: false,
-    swordPrice: SWORD_START_PRICE,
-    crisisChoice: null,
-    tradeLocked: false,
-    vote: null,
-    dailies: null,
-    dailiesGold: 0,
-    ending: null,
-    pricesInUsd: false,
-    revealed: false,
-    yourTurn: null,
+    // The reader's three answers: chapter 2 (the leash), 3 (the lock), 4 (the counters).
+    path: { leash: null, bank: null, exchange: null },
+    priced: false,
+    endingsFound: new Set(),
     phase: "game",
   };
 
+  // ---------- the ledger ----------
+  // One entry per move. gold: change in the pouch; value: what each coin buys (×); hours and paid: what
+  // the studio got from you; grey: dollars that went to the grey market; cash: dollars you took home.
+  // locked freezes the pouch until a later entry unlocks it; banned empties it for good.
+
+  const WHO = { studio: "STUDIO", you: "YOU", players: "PLAYERS" };
+  const ledger = new Map();
+  const entries = () => [...ledger.values()];
+  const sum = (key, list = entries()) => list.reduce((n, e) => n + (e[key] || 0), 0);
+  const valueOf = (list = entries()) => list.reduce((n, e) => n * (e.value ?? 1), 1);
+  const bannedIn = (list = entries()) => list.some((e) => e.banned);
+  const lockedIn = (list = entries()) => list.some((e) => e.locked) && !list.some((e) => e.unlocks);
+  // Worth in day-0 gold (a sword at 100). Locked or banned gold is worth nothing to anyone.
+  const worthOf = (list = entries()) => (bannedIn(list) || lockedIn(list) ? 0 : sum("gold", list) * valueOf(list));
+  const toUsd = (dayZeroGold) => (dayZeroGold * BOND_USD) / BOND_GOLD;
+  const usdOf = (list = entries()) => toUsd(worthOf(list));
+  const usd = (v) => {
+    if (v === 0) return "$0";
+    return v >= 0.01 ? `$${v.toFixed(2)}` : `$${v.toPrecision(2)}`;
+  };
+  const pct = (value) => `value ${value >= 1 ? "+" : "−"}${Math.abs(Math.round((value - 1) * 100))}%`;
+
+  function record(key, entry, note) {
+    ledger.set(key, entry);
+    pouch.draw();
+    if (note) { pouch.say(entry.who, note); pouch.bump(); }
+  }
+
   // ---------- pouch ----------
+  // Top line: your gold. Then what it buys (and, once the Bond exists, what it's worth in dollars).
+  // Underneath, the other side's score: the hours and dollars the studio has had from you.
 
   const pouch = {
     el: $("pouch"),
     amount: $("pouch-amount"),
     sub: $("pouch-sub"),
+    counting: false,
     show() { this.el.hidden = false; },
     setGold(n) {
       state.gold = n;
       this.amount.textContent = fmt(n);
     },
-    setSub(text) { this.sub.textContent = text; },
-    // Redraw the sub line and the $ line from the ledger.
     draw() {
-      this.setSub(isLocked() ? "locked · can't trade" : `buys ${fmt(swordsNow())} swords`);
+      const list = entries();
+      const banned = bannedIn(list);
+      const locked = !banned && lockedIn(list);
+      this.el.classList.toggle("locked", locked);
+      this.el.classList.toggle("banned", banned);
+      if (!this.counting) this.setGold(sum("gold", list));
+      this.sub.textContent = banned ? "banned · account closed"
+        : locked ? "locked · can't trade"
+        : `buys ${fmt(Math.floor(worthOf(list) / SWORD_START_PRICE))} swords`;
       const line = $("pouch-usd");
-      if (!line.hidden) line.textContent = state.pricesInUsd ? `≈ ${usd(pouchWorth())}` : "$ ???";
+      line.hidden = !state.priced;
+      line.textContent = `≈ ${usd(usdOf(list))}`;
+      $("pouch-take").textContent = `STUDIO GOT ${fmt(sum("hours", list))} h · $${sum("paid", list).toFixed(2)}`;
+      const grey = sum("grey", list);
+      $("pouch-grey").hidden = grey === 0;
+      $("pouch-grey").textContent = `GREY MARKET GOT $${grey.toFixed(2)}`;
     },
     // A short note under the pouch: who just changed it, and how.
     say(who, text) {
@@ -70,11 +110,6 @@
       void this.el.offsetWidth;
       this.el.classList.add("hint");
     },
-    lock(on) {
-      this.el.classList.toggle("locked", on);
-      this.draw();
-      this.bump();
-    },
     countTo(target, ms) {
       if (reducedMotion) { this.setGold(target); return Promise.resolve(); }
       const from = state.gold;
@@ -91,36 +126,17 @@
     },
   };
 
-  const swordsFor = (price) => Math.floor(START_GOLD / price);
-
-  // ---------- the ledger ----------
-  // Every change to the pouch is written down with who made it. The pouch, the receipt and the last
-  // chapter all read from here. `value` multiplies what each coin is worth; `locked` freezes it at zero.
-
-  const WHO = { studio: "STUDIO", director: "YOU, AS THE STUDIO", players: "PLAYERS" };
-  const ledger = new Map();
-  const ledgerGold = (entries = [...ledger.values()]) => entries.reduce((n, e) => n + e.gold, 0);
-  const ledgerValue = (entries = [...ledger.values()]) => entries.reduce((n, e) => n * e.value, 1);
-  // What the pouch is worth in day-0 gold: a sword at 100 gold, a Bond at 9.6 million.
-  const worthOf = (entries) => (entries.some((e) => e.locked) && !entries.some((e) => e.unlocks) ? 0 : ledgerGold(entries) * ledgerValue(entries));
-  const pouchWorth = () => worthOf([...ledger.values()]);
-  const isLocked = () => pouchWorth() === 0 && ledgerGold() > 0;
-  const swordsNow = () => Math.floor(pouchWorth() / SWORD_START_PRICE);
-  const pct = (value) => `value ${value >= 1 ? "+" : "−"}${Math.abs(Math.round((value - 1) * 100))}%`;
-
-  function record(key, entry, note) {
-    ledger.set(key, { gold: 0, value: 1, ...entry });
-    pouch.draw();
-    if (note) { pouch.say(entry.who, note); pouch.bump(); }
-  }
-
   // ---------- reveal on scroll ----------
   // A screen with data-on-reveal runs that action the first time it comes into view.
 
   const onReveal = {
     pouch: () => pouch.hint(),
+    mint: () => mintMove(),
     rate: () => runRate(),
-    usd: () => showUsd(),
+    lock: () => lockMove(),
+    vote: () => voteMove(),
+    usd: () => bondMove(),
+    prices: () => flipShop(),
     receipt: () => setPhase("receipt"),
     print: () => printReceipt(),
   };
@@ -129,9 +145,9 @@
     entries.forEach((e) => {
       if (e.isIntersecting) {
         e.target.classList.add("in");
-        revealObserver.unobserve(e.target);
+        // An action that returns false wasn't ready yet; it stays watched and runs next time.
         const action = onReveal[e.target.dataset.onReveal];
-        if (action) action();
+        if (!action || action() !== false) revealObserver.unobserve(e.target);
       }
     });
   }, { threshold: 0.2 });
@@ -221,7 +237,7 @@
 
   // ---------- pager: back / next ----------
   // Scrolling still works; the buttons (and ← →) jump one screen at a time.
-  // Hidden screens are skipped, so NEXT stops at COLLECT until the reader collects.
+  // Hidden screens are skipped, so NEXT stops at each decision until the reader answers it.
 
   const pager = { prev: $("prev"), next: $("next"), count: $("page-count") };
 
@@ -240,7 +256,7 @@
     pager.next.disabled = i === screens.length - 1;
     updateToc(screens[i]);
     // Safari won't scroll inside a snap area taller than the window, so snapping pauses on tall screens
-    // (the sources, an opened note, the sim on a phone) and comes back on the next normal one.
+    // (the sources, an opened note, a decision on a phone) and comes back on the next normal one.
     document.documentElement.classList.toggle("free-scroll", screens[i].offsetHeight > window.innerHeight + 2);
   }
 
@@ -300,16 +316,16 @@
     $("collect").disabled = true;
     $("collect-skip").hidden = true;
     pouch.show();
-    record("login", { who: "studio", k: "Collected on login", gold: START_GOLD, text: "printed out of nothing" }, `printed +${fmt(START_GOLD)}`);
-    state.gold = 0;
+    pouch.counting = true;
     pouch.setGold(0);
+    record("login", { who: "studio", k: "Log in", gold: START_GOLD, text: "printed for you, out of nothing" }, `printed +${fmt(START_GOLD)}`);
     document.body.classList.add("collected");
     if (animated) {
       flyCoins($("collect"), pouch.el, 16);
       await pouch.countTo(START_GOLD, 1300);
-    } else {
-      pouch.setGold(START_GOLD);
     }
+    pouch.counting = false;
+    pouch.draw();
     pouch.bump();
     $("collect").textContent = "COLLECTED";
     $("after-collect").hidden = false;
@@ -319,224 +335,32 @@
   $("collect").addEventListener("click", () => collect(true));
   $("collect-skip").addEventListener("click", () => collect(false));
 
-  // ---------- chapter 1: run the server ----------
-  // Price follows the gold in circulation. Taps pour gold in (more players join every day, so taps
-  // get stronger over time); drains remove a share of what's in circulation. Day 10 adds a gold-copy
-  // bug, day 20 makes drains weaker because players hoard. Holding 80–120 is possible, but only by
-  // cutting drops or raising costs, and players leave when you do.
-
-  const sim = {
-    days: 30,
-    tickMs: 900,
-    money: SWORD_START_PRICE,
-    day: 0,
-    players: 1000,
-    hoarding: false,
-    history: [SWORD_START_PRICE],
-    timer: null,
-    done: false,
-  };
-
-  const simEls = {
-    day: $("sim-day"),
-    price: $("sim-price"),
-    band: $("sim-band"),
-    line: $("sim-line"),
-    events: $("sim-events"),
-    tap: $("sim-tap"),
-    drain: $("sim-drain"),
-    chat: $("sim-chat"),
-    start: $("sim-start"),
-    skip: $("sim-skip"),
-  };
-
-  const complaints = {
-    stingy: [["Player42", "drops are so stingy"], ["afk_fisher", "killed 50 wolves, got nothing"], ["Player42", "this grind isn't worth it"]],
-    repairs: [["ironman_btw", "repairs cost a fortune now"], ["tank_main", "half my loot goes on repairs"]],
-    expensive: [["xX_sword_Xx", "why is everything so expensive?"], ["Lumby_Larry", "prices doubled since I logged off"], ["mage4life", "can't afford anything any more"]],
-    cheap: [["gp_hoarder", "my loot sells for nothing"], ["merchant_mo", "can't make a profit on anything"]],
-    quit: [["SYSTEM", "a player has logged out for good"]],
-  };
-
-  let lastLine = "";
-  function complain(kind) {
-    const options = complaints[kind].filter(([, text]) => text !== lastLine);
-    const pick = options[Math.floor(Math.random() * options.length)] || complaints[kind][0];
-    lastLine = pick[1];
-    say(pick);
-  }
-
-  function say([who, text], box = simEls.chat, keep = 3) {
-    const line = document.createElement("div");
-    const name = document.createElement("span");
-    name.className = "who";
-    name.textContent = `${who}: `;
-    line.append(name, text);
-    const quiet = box.querySelector(".muted");
-    if (quiet) quiet.remove();
-    box.appendChild(line);
-    while (box.children.length > keep) box.firstElementChild.remove();
-  }
-
-  function simEvent(text) {
-    const tag = document.createElement("span");
-    tag.className = "event";
-    tag.textContent = text;
-    simEls.events.appendChild(tag);
-  }
-
-  function drawChart(band = simEls.band, line = simEls.line) {
-    const yMax = Math.max(500, Math.max(...sim.history) * 1.1);
-    const y = (p) => 150 - (p / yMax) * 150;
-    band.setAttribute("y", y(120));
-    band.setAttribute("height", y(80) - y(120));
-    const points = sim.history.map((p, i) => `${(i / sim.days) * 300},${y(p)}`).join(" ");
-    line.setAttribute("points", points);
-  }
-
-  function simLabels() {
-    const price = Math.round(sim.money);
-    simEls.day.textContent = `DAY ${sim.day} / ${sim.days}`;
-    simEls.price.textContent = `SWORD: ${fmt(price)} gold`;
-    simEls.price.classList.toggle("bad", price < 80 || price > 120);
-  }
-
-  function simStep() {
-    sim.day += 1;
-    const tap = Number(simEls.tap.value);
-    const drain = Number(simEls.drain.value);
-    const growth = 1 + 0.05 * sim.day;
-    const inflow = 0.2 * tap * growth;
-    const outflow = 0.002 * drain * sim.money * (sim.hoarding ? 0.6 : 1);
-    sim.money = Math.max(5, sim.money + inflow - outflow);
-
-    if (sim.day === 10) {
-      sim.money += 200;
-      simEvent("Day 10 · A bug lets players copy gold.");
-    }
-    if (sim.day === 20) {
-      sim.hoarding = true;
-      simEvent("Day 20 · Players are hoarding. Drains bite less.");
-    }
-
-    const price = Math.round(sim.money);
-    const unhappy = [];
-    if (tap < 35) unhappy.push("stingy");
-    if (drain > 70) unhappy.push("repairs");
-    if (price > 120) unhappy.push("expensive");
-    if (price < 80) unhappy.push("cheap");
-
-    if (tap < 35 || drain > 70) {
-      sim.players = Math.round(sim.players * 0.97);
-      if (sim.day % 4 === 0) complain("quit");
-    }
-    if (unhappy.length && sim.day % 2 === 1) {
-      complain(unhappy[Math.floor(Math.random() * unhappy.length)]);
-    }
-
-    sim.history.push(price);
-    drawChart();
-    simLabels();
-    if (sim.day >= sim.days) simFinish();
-  }
-
-  function simStart() {
-    if (sim.timer || sim.done) return;
-    simEls.start.disabled = true;
-    simEls.start.textContent = "[ RUNNING… ]";
-    sim.timer = setInterval(simStep, sim.tickMs);
-  }
-
-  function simResultText(price) {
-    const lost = 1000 - sim.players;
-    if (price > 120) {
-      return `Day 30. A sword now costs ${fmt(price)} gold. Your pouch still says 1,000,000. It just buys a lot less than it did.`;
-    }
-    if (price < 80) {
-      return `Day 30. A sword costs only ${fmt(price)} gold. Your pouch buys more than ever, but nobody's loot is worth farming any more.${lost ? ` ${fmt(lost)} players have quit.` : ""}`;
-    }
-    if (lost > 0) {
-      return `Day 30. A sword costs ${fmt(price)} gold. You held the line. It cost you ${fmt(lost)} players, who decided the drops were too stingy or the repairs too expensive.`;
-    }
-    return `Day 30. A sword costs ${fmt(price)} gold, and nobody quit. Real studios hire economists to do what you just did.`;
-  }
-
-  function simFinish(presetPrice) {
-    clearInterval(sim.timer);
-    sim.timer = null;
-    sim.done = true;
-    const price = presetPrice ?? Math.round(sim.money);
-    state.swordPrice = price;
-
-    simEls.tap.disabled = true;
-    simEls.drain.disabled = true;
-    simEls.start.disabled = true;
-    simEls.start.textContent = "[ DAY 30 ]";
-    simEls.skip.hidden = true;
-
-    const value = SWORD_START_PRICE / price;
-    record("mint", { who: "director", k: "The Mint", value, text: `you ran the server: sword ${SWORD_START_PRICE} → ${fmt(price)} gold` },
-      Math.abs(value - 1) < 0.005 ? "prices held · value unchanged" : `a sword costs ${fmt(price)} · ${pct(value)}`);
-
-    $("sim-result-text").textContent = simResultText(price);
-    $("after-sim").hidden = false;
-    updatePager();
-    $("sim-result").scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "center" });
-    fillReport(price);
-  }
-
-  // The report card: a verdict, three numbers that count up, and the price line again.
-
-  function countUp(el, from, to, ms) {
-    if (reducedMotion) { el.textContent = fmt(to); return; }
+  function countUp(el, from, to, ms, unit = "") {
+    if (reducedMotion) { el.textContent = fmt(to) + unit; return; }
     const t0 = performance.now();
     const frame = (now) => {
       const p = Math.min(1, (now - t0) / ms);
-      el.textContent = fmt(from + (to - from) * (1 - Math.pow(1 - p, 3)));
+      el.textContent = fmt(from + (to - from) * (1 - Math.pow(1 - p, 3))) + unit;
       if (p < 1) requestAnimationFrame(frame);
     };
     requestAnimationFrame(frame);
   }
 
-  function fillReport(price) {
-    const lost = 1000 - sim.players;
-    const inBand = price >= 80 && price <= 120;
-    const swords = swordsFor(price);
-    const change = Math.round((price / SWORD_START_PRICE - 1) * 100);
+  const times = (n) => (n === 1 ? "once" : n === 2 ? "twice" : `${n} times`);
+  const dollars = (v) => `$${v.toFixed(2)}`;
 
-    const verdict = $("rep-verdict");
-    verdict.textContent = price > 120 ? "Inflation."
-      : price < 80 ? "Deflation."
-      : lost > 0 ? "Prices held. Players didn't."
-      : "Stable.";
-    verdict.classList.toggle("bad", !inBand || lost > 0);
+  // ---------- chapter 1: the studio's move ----------
+  // Double drops for a month. The price line draws itself and every coin buys 30% less. No answer allowed.
 
-    $("rep-price-d").textContent = change === 0 ? "gold · same as day 0" : `gold · ${change > 0 ? "+" : ""}${change}% since day 0`;
-    $("rep-price-box").classList.toggle("bad", !inBand);
-    $("rep-players-d").textContent = lost > 0 ? `${fmt(lost)} quit` : "nobody quit";
-    $("rep-players-box").classList.toggle("bad", lost > 0);
-    $("rep-swords-box").classList.toggle("bad", swords < 10000 * 0.8);
+  const MINT_VALUE = 0.7;
+  const MINT_PRICE = Math.round(SWORD_START_PRICE / MINT_VALUE);
 
-    drawChart($("rep-band"), $("rep-line"));
-    setTimeout(() => {
-      countUp($("rep-price"), SWORD_START_PRICE, price, 1400);
-      countUp($("rep-players"), 1000, sim.players, 1400);
-      countUp($("rep-swords"), 10000, swords, 1400);
-      pouch.hint();
-    }, reducedMotion ? 0 : 600);
+  function mintMove() {
+    if (ledger.has("mint")) return;
+    record("mint", { who: "studio", k: "The Mint", value: MINT_VALUE, text: `double drops for a month: a sword went ${SWORD_START_PRICE} → ${MINT_PRICE} gold` }, "double drops · value −30%");
+    $("mint-chart").classList.add("draw");
+    countUp($("mint-price"), SWORD_START_PRICE, MINT_PRICE, 1800, " gold");
   }
-
-  simEls.start.addEventListener("click", simStart);
-  simEls.skip.addEventListener("click", () => {
-    if (sim.done) return;
-    sim.history = [100, 100, 104, 110, 118, 126, 135, 146, 158, 170, 184, 390, 360, 335, 318, 305, 298, 296, 297, 300, 305, 330, 352, 372, 390, 405, 418, 430, 440, 450, 460];
-    sim.day = 30;
-    drawChart();
-    sim.money = 460;
-    simLabels();
-    simFinish(460);
-  });
-  drawChart();
 
   // ---------- chapter 1: Ultima Online exchange rate ----------
   // 200 gold per dollar, then a coin worth ~100 times less: the board climbs to 20,000.
@@ -562,434 +386,177 @@
     }, 1200);
   }
 
-  // ---------- gates and the fade ----------
-  // A gate is a hidden wrapper around everything after an interaction; opening it lets the reader on.
+  // ---------- gates and decisions ----------
+  // A gate is a hidden wrapper around everything after a decision; answering opens it.
+  // A decision is a column of buttons: picking one locks the rest, writes the answer to the ledger,
+  // and prints what happened under it.
 
   function openGate(id) {
     $(id).hidden = false;
     updatePager();
   }
 
-  // Fade to black, run `swap` while the screen is dark, land on `target`, fade back in.
-  function fadeTo(target, swap) {
-    const land = () => window.scrollTo({ top: target.offsetTop, behavior: "instant" });
-    if (reducedMotion) { swap(); land(); return; }
-    const cover = $("fade-cover");
-    cover.classList.add("on");
-    setTimeout(() => {
-      swap();
-      land();
-      cover.classList.remove("on");
-    }, 750);
-  }
-
   const pause = (ms) => (reducedMotion ? 0 : ms);
 
-  // ---------- chapter 2: the dailies ----------
-  // Sixteen clicks of work and twelve of energy: the list can't be finished today without the refill.
-  // The refill is pretend; the note after it says so.
-
-  const ENERGY = 12;
-  const DAILY_GOLD = 600;
-  const daily = { energy: ENERGY, running: false, refilled: false, done: false };
-  const taskEls = [...document.querySelectorAll("#dailies .task[data-task]")];
-  const progress = Object.fromEntries(taskEls.map((li) => [li.dataset.task, 0]));
-  const taskButton = (li) => li.querySelector("button");
-  const taskDone = (li) => progress[li.dataset.task] >= Number(li.dataset.need);
-
-  function drawEnergy() {
-    $("energy-fill").style.width = `${(daily.energy / ENERGY) * 100}%`;
-    $("energy-num").textContent = `${daily.energy} / ${ENERGY}`;
+  function decide(id, answer) {
+    const box = $(id);
+    const buttons = box.querySelectorAll("[data-pick]");
+    buttons.forEach((btn) => btn.addEventListener("click", () => {
+      if (box.dataset.done) return;
+      box.dataset.done = "1";
+      buttons.forEach((b) => { b.disabled = true; b.classList.toggle("picked", b === btn); });
+      answer(btn.dataset.pick);
+    }));
   }
 
-  // The reset clock counts down to the reader's own midnight.
-  function tickReset() {
-    const now = new Date();
-    const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-    const left = Math.floor((midnight - now) / 1000);
-    const two = (n) => String(n).padStart(2, "0");
-    $("dailies-reset").textContent = `resets in ${two(Math.floor(left / 3600))}:${two(Math.floor(left / 60) % 60)}:${two(left % 60)}`;
-  }
-  tickReset();
-  setInterval(tickReset, 1000);
-
-  function setTaskButtons(on) {
-    taskEls.forEach((li) => { taskButton(li).disabled = !on || taskDone(li); });
+  function resetDecision(id) {
+    const box = $(id);
+    delete box.dataset.done;
+    box.hidden = false;
+    box.querySelectorAll("[data-pick]").forEach((b) => { b.disabled = false; b.classList.remove("picked"); });
   }
 
-  const dailiesNotes = {
-    paid: "Nothing was charged: this is a page about games. In a real one, that button is what the whole list was built for.",
-    waited: "Tomorrow the list resets, and so does your energy. See you then. And the day after.",
+  function showResult(id, text) {
+    $(id).textContent = text;
+    $(id).hidden = false;
+    updatePager();
+  }
+
+  // A banned player loses the next decision: the buttons give way to a note and a way to carry on.
+  function benchAt(decision, note) {
+    $(decision).hidden = true;
+    $(note).hidden = false;
+  }
+
+  // ---------- chapter 2: the leash ----------
+  // Four ways to get a sword the studio has made slow on purpose. The grey market is the cheapest.
+
+  const SWORD_GOLD = 4000000;
+  const LEASH = {
+    grind: { gold: SWORD_GOLD, hours: 60, text: "ground out the sword: three weeks of evenings", note: "+4,000,000 gold · 60 h to the studio",
+      result: "Three weeks later, the sword is yours. The studio got what it wanted too: 60 more hours on its dashboard." },
+    pay: { gold: SWORD_GOLD, hours: 20, paid: 19.9, text: "paid for ten energy refills", note: "+4,000,000 gold · $19.90 to the studio",
+      result: "Ten refills later, the sword is yours, in a third of the time. The studio got $19.90 and 20 hours. That's what the energy bar was for." },
+    grey: { gold: SWORD_GOLD, grey: 2, text: "bought 4,000,000 gold from a seller for $2", note: "+4,000,000 gold · $2 to a gold seller",
+      result: "The gold arrives in ten minutes, ten times cheaper than the refills. How does a seller have 4 million gold to spare? Bots, farming all night. Remember this." },
+    leave: { text: "logged off for a while", note: "+0 · the studio lost a player",
+      result: "You log off. The studio's dashboard shows one player fewer. Your gold waits in the bank." },
   };
 
-  function dailiesEnd(how) {
-    if (daily.done) return;
-    daily.done = true;
-    daily.running = false;
-    state.dailies = how;
-    if (how === "paid") {
-      record("dailies", { who: "studio", k: "The Leash", gold: DAILY_GOLD, text: "energy ran out; you paid $1.99 (pretend)" }, `+${fmt(DAILY_GOLD)} gold for $1.99`);
+  decide("d-leash", (pick) => {
+    mintMove();
+    state.path.leash = pick;
+    const a = LEASH[pick];
+    record("leash", { who: "you", k: "The Leash", ...a }, a.note);
+    if (a.gold) flyCoins($("d-leash"), pouch.el, 8);
+    showResult("r-leash", a.result);
+    $("lock-you").textContent = pick === "grey"
+      ? "And the 4,000,000 gold you bought for $2? It came from a bot farm, and the studio followed it to you. Your account is banned. Your pouch is empty."
+      : pick === "leave"
+        ? `You weren't even playing. Your ${fmt(sum("gold"))} gold is locked anyway.`
+        : `Your ${fmt(sum("gold"))} gold can't move. You can't give it, lend it, or sell it fairly.`;
+    if (pick === "grey") benchAt("d-bank", "b-bank");
+    setTimeout(() => openGate("after-d1"), pause(700));
+  });
+
+  // ---------- chapter 3: the lock, your answer, the vote ----------
+
+  function lockMove() {
+    if (ledger.has("lock")) return;
+    if (state.path.leash === "grey") {
+      record("lock", { who: "studio", k: "Trade blocked", banned: true, gold: -sum("gold"), text: "trade limits, and your bot gold traced: banned" }, "bot gold traced · account banned");
     } else {
-      record("dailies", { who: "studio", k: "The Leash", text: "energy ran out; back tomorrow" }, "+0 · come back tomorrow");
+      record("lock", { who: "studio", k: "Trade blocked", locked: true, text: "trades over 3,000 gold blocked, for everyone" }, "trading locked");
     }
-    setTaskButtons(false);
-    $("dailies-out").hidden = true;
-    $("dailies-actions").hidden = true;
-    $("dailies-note").textContent = dailiesNotes[how];
-    $("dailies-after").hidden = false;
-    openGate("after-dailies");
-  }
-
-  taskEls.forEach((li) => taskButton(li).addEventListener("click", () => {
-    if (!daily.running || daily.energy <= 0 || taskDone(li)) return;
-    daily.energy -= 1;
-    progress[li.dataset.task] += 1;
-    li.querySelector(".p").textContent = `${progress[li.dataset.task]} / ${li.dataset.need}`;
-    if (taskDone(li)) { li.classList.add("done"); taskButton(li).disabled = true; }
-    drawEnergy();
-    if (taskEls.every(taskDone)) {
-      state.dailiesGold = DAILY_GOLD;
-      pouch.setGold(state.gold + DAILY_GOLD);
-      flyCoins($("dailies"), pouch.el, 6);
-      $("dailies-reward").textContent = `All done: +${DAILY_GOLD} gold`;
-      dailiesEnd("paid");
-    } else if (daily.energy <= 0) {
-      setTaskButtons(false);
-      $("dailies-out").hidden = false;
-      updatePager();
-    }
-  }));
-
-  $("dailies-start").addEventListener("click", () => {
-    if (daily.running || daily.done) return;
-    daily.running = true;
-    $("dailies-start").disabled = true;
-    setTaskButtons(true);
-    taskButton(taskEls[0]).focus();
-  });
-
-  $("refill").addEventListener("click", () => {
-    if (daily.refilled || daily.done) return;
-    daily.refilled = true;
-    daily.energy = ENERGY;
-    drawEnergy();
-    $("dailies-out").hidden = true;
-    setTaskButtons(true);
-  });
-
-  $("wait").addEventListener("click", () => dailiesEnd("waited"));
-  $("dailies-skip").addEventListener("click", () => dailiesEnd("waited"));
-  drawEnergy();
-
-  // ---------- chapter 2: the studio story ----------
-  // A short branching story from the director's chair. A choice nudges the meters and names the next scene.
-  // Endings are fixed by the path, not by the meters, so each one can say plainly why it happened.
-
-  const STORY = {
-    start: {
-      lines: [
-        ["VERA · FINANCE", "Daily players are down 20% this year. The board wants them back up by next quarter."],
-        ["SAM · COMMUNITY", "Players say there's nothing new to do. They've seen it all."],
-      ],
-      choices: [
-        { label: "Add daily tasks and a login streak.", next: "chores", d: { players: 10, trust: -10, cash: 5 } },
-        { label: "Make the best gear drop less often.", next: "drops", d: { players: 5, trust: -15, cash: 5 } },
-        { label: "Start building a big new expansion.", next: "build", d: { trust: 5, cash: -15 } },
-      ],
-    },
-    chores: {
-      lines: [
-        ["mira_k", "another daily list? cool. love my second job", "player"],
-        ["VERA · FINANCE", "Hours played are up 30%. Whatever you did, keep doing it."],
-        ["SAM · COMMUNITY", "They're logging in. They're just not enjoying it."],
-      ],
-      choices: [
-        { label: "Keep it, and add a paid battle pass.", end: "treadmill", d: { trust: -15, cash: 20 } },
-        { label: "Roll it back and start the expansion.", next: "build", late: true, d: { players: -5, trust: 10, cash: -15 } },
-      ],
-    },
-    drops: {
-      lines: [
-        ["dax_99", "3 weeks for one drop?? gold sellers have it for $5", "player"],
-        ["SAM · COMMUNITY", "The rare gear is already for sale on outside websites. Bots farm it day and night."],
-        ["VERA · FINANCE", "Time played is up, though. Can't we just ban the bots?"],
-      ],
-      choices: [
-        { label: "Keep the drop rate. Ban the bots.", end: "lights", d: { players: -15, trust: -15 } },
-        { label: "Put the drop rate back and start the expansion.", next: "build", late: true, d: { trust: 5, cash: -15 } },
-      ],
-    },
-    build: {
-      lines: [
-        ["VERA · FINANCE", "An expansion takes at least a year. Who's building it?"],
-        ["SAM · COMMUNITY", "Our team has kept the game running for years. They've never made anything this big."],
-      ],
-      choices: [
-        { label: "Our own team. Keep costs down.", end: "empty", d: { cash: -5 } },
-        { label: "Hire experienced designers, whatever it costs.", next: "wait", d: { cash: -20 } },
-      ],
-    },
-    wait: {
-      lines: [
-        ["VERA · FINANCE", "Cash is running low, and players are drifting while we build. Give them something to grind until launch?"],
-        ["mira_k", "is this game even getting updates anymore", "player"],
-      ],
-      choices: [
-        { label: "Add a grind event to hold them.", end: "scars", d: { players: 5, trust: -10 } },
-        { label: "Tell players the plan, and let them vote on it.", end: "good", d: { trust: 20 } },
-      ],
-    },
-  };
-
-  const ENDINGS = {
-    good: {
-      tone: "good", label: "GOOD ENDING", title: "Worth staying for", gold: 50000, value: 1.3, why: "players came back, and more players want more gold",
-      text: "The expansion launches late and over budget, but it's good, and players voted for it, so it feels like theirs. Old players come back and new ones arrive. The board gets its numbers, and nobody had to be chained to a chore list.",
-      real: "Real studios have pulled this off. Read on.",
-      meters: { players: 85, trust: 90, cash: 60 },
-    },
-    scars: {
-      tone: "mixed", label: "MIXED ENDING", title: "Good game, sore players", gold: 20000, value: 1.1, why: "most players came back, if carefully",
-      text: "The expansion is great. But the grind event made players wonder whether the chores were coming back. They return carefully, with one eye on the exit.",
-      real: "Trust is slow to build and quick to spend.",
-      meters: { players: 70, trust: 50, cash: 55 },
-    },
-    treadmill: {
-      tone: "mixed", label: "MIXED ENDING", title: "The treadmill", gold: 120000, value: 0.6, why: "the chores poured gold in, so each coin buys less",
-      text: "The numbers look great. Players log in every day, clear their lists, buy the pass and complain. Few of them are having fun, but few leave, yet. Emberfall keeps running as a chore machine.",
-      real: "Remember that comment: “they know we won't stop playing.”",
-      meters: { players: 70, trust: 20, cash: 90 },
-    },
-    lights: {
-      tone: "bad", label: "BAD ENDING", title: "Lights out", gold: 0, value: 0.1, why: "players left, and nobody wants a dying game's gold",
-      text: "The bots come back on new accounts every day. Honest players give up on the drop: some buy it from gold sellers, most just quit. Two years later, Emberfall's servers go dark.",
-      real: "In chapter 3, RuneScape tries banning bots too.",
-      meters: { players: 10, trust: 10, cash: 15 },
-    },
-    empty: {
-      tone: "bad", label: "BAD ENDING", title: "Big promise, empty launch", gold: 0, value: 0.5, why: "half the players left, and half the buyers with them",
-      text: "The expansion ships late, buggy and thin. Players who waited a year feel cheated, and the money is gone. Good content needs people who know how to make it, and Emberfall didn't have them.",
-      real: "That's the risk most studios won't take. Read on.",
-      meters: { players: 20, trust: 15, cash: 5 },
-    },
-  };
-
-  const METERS_START = { players: 55, trust: 60, cash: 60 };
-  const story = { meters: { ...METERS_START }, quarter: 0, late: false, busy: false };
-  const storyLines = $("story-lines");
-  const storyChoices = $("story-choices");
-  state.endingsFound = new Set();
-
-  function drawMeters() {
-    document.querySelectorAll("#story .meter").forEach((m) => {
-      const v = story.meters[m.dataset.m];
-      m.querySelector(".fill").style.width = `${v}%`;
-      m.classList.toggle("low", v < 30);
-    });
-  }
-
-  function nudge(d = {}) {
-    Object.entries(d).forEach(([k, v]) => { story.meters[k] = Math.min(100, Math.max(5, story.meters[k] + v)); });
-    drawMeters();
-  }
-
-  function storyLine([who, text, kind]) {
-    const line = document.createElement("p");
-    line.className = kind === "player" ? "line player" : "line";
-    const name = document.createElement("span");
-    name.className = "who";
-    name.textContent = who;
-    line.append(name, text);
-    storyLines.appendChild(line);
-  }
-
-  function choiceButton(label, onPick) {
-    const btn = document.createElement("button");
-    btn.className = "btn";
-    btn.textContent = label;
-    btn.addEventListener("click", onPick);
-    storyChoices.appendChild(btn);
-    return btn;
-  }
-
-  function playScene(id) {
-    const scene = STORY[id];
-    story.quarter += 1;
-    story.busy = true;
-    $("story-scene").textContent = `QUARTER ${story.quarter}`;
-    storyLines.replaceChildren();
-    storyChoices.replaceChildren();
-    scene.lines.forEach((line, i) => setTimeout(() => storyLine(line), pause(700 * i)));
-    setTimeout(() => {
-      story.busy = false;
-      scene.choices.forEach((c) => choiceButton(c.label, () => {
-        if (story.busy) return;
-        nudge(c.d);
-        if (c.late) story.late = true;
-        if (c.end) endStory(c.end); else playScene(c.next);
-      }));
-      updatePager();
-    }, pause(700 * scene.lines.length));
-  }
-
-  function endStory(id) {
-    const e = ENDINGS[id];
-    state.ending = id;
-    state.endingsFound.add(id);
-    story.meters = { ...e.meters };
-    drawMeters();
-    $("story-scene").textContent = "TWO YEARS LATER";
-    storyLines.replaceChildren();
-    storyChoices.replaceChildren();
-    const box = document.createElement("div");
-    box.className = `ending ${e.tone}`;
-    const label = document.createElement("p");
-    label.className = "ending-label";
-    label.textContent = e.label;
-    const title = document.createElement("p");
-    title.className = "ending-title";
-    title.textContent = e.title;
-    const text = document.createElement("p");
-    text.textContent = id === "good" && story.late ? `It cost you a U-turn and a lost quarter. ${e.text}` : e.text;
-    const effect = `${e.gold ? `+${fmt(e.gold)} gold · ` : ""}${pct(e.value)}`;
-    const hit = document.createElement("p");
-    hit.className = "ending-pouch";
-    hit.textContent = `YOUR POUCH · ${effect} · ${e.why}`;
-    const real = document.createElement("p");
-    real.className = "ending-real";
-    real.textContent = e.real;
-    box.append(label, title, text, hit, real);
-    record("story", { who: "director", k: "Your studio", gold: e.gold, value: e.value, text: e.title }, effect);
-    pouch.setGold(ledgerGold());
-    storyLines.appendChild(box);
-    const found = document.createElement("p");
-    found.className = "found";
-    found.textContent = `Endings found: ${state.endingsFound.size} of ${Object.keys(ENDINGS).length}`;
-    choiceButton("[ TRY AGAIN ]", startStory);
-    storyChoices.appendChild(found);
-    $("story-skip").hidden = true;
-    openGate("after-story");
-  }
-
-  function startStory() {
-    story.meters = { ...METERS_START };
-    story.quarter = 0;
-    story.late = false;
-    drawMeters();
-    $("story-actions").hidden = true;
-    playScene("start");
-  }
-
-  $("story-start").addEventListener("click", startStory);
-  $("story-skip").addEventListener("click", () => {
-    $("story-skip").hidden = true;
-    record("story", { who: "director", k: "Your studio", text: "skipped, so nothing changed" });
-    openGate("after-story");
-  });
-  drawMeters();
-
-  // ---------- chapter 3: the crisis room ----------
-  // Each choice gets its own chat reaction, then every choice lands on the same screen.
-
-  const crisisLines = {
-    ban: ["Ban the bots", [["MOD", "A wave of bot accounts has been banned."], ["lumbridge_lad", "they're back already lol"], ["fletch_master", "new accounts are free. they'll just make more"]]],
-    limit: ["Limit trading", [["MOD", "Trade limits are now in place."], ["lumbridge_lad", "wait, I can't pay my brother back??"], ["fletch_master", "the gold sellers will find a way round it"]]],
-    sell: ["Sell gold ourselves", [["MOD", "The official gold shop is now open."], ["lumbridge_lad", "so the gold seller is you now?"], ["fletch_master", "pay to win. uninstalling"]]],
-    nothing: ["Do nothing", [["MOD", "..."], ["lumbridge_lad", "bots on every rock again"], ["fletch_master", "prices doubled overnight"]]],
-  };
-
-  const crisisButtons = document.querySelectorAll("#crisis [data-choice]");
-  crisisButtons.forEach((btn) => btn.addEventListener("click", () => {
-    if (state.crisisChoice) return;
-    const [label, lines] = crisisLines[btn.dataset.choice];
-    state.crisisChoice = label;
-    record("crisis", { who: "studio", k: "The crisis room", text: `you picked “${label}”; overruled` });
-    crisisButtons.forEach((b) => { b.disabled = true; b.classList.toggle("picked", b === btn); });
-    lines.forEach((line, i) => setTimeout(() => say(line, $("crisis-chat"), 4), pause(700 * (i + 1))));
-    setTimeout(() => {
-      fadeTo($("crisis-result"), () => {
-        $("crisis-picked").textContent = `You picked “${label}.”`;
-        openGate("after-crisis");
-      });
-    }, pause(700 * lines.length + 1600));
-  }));
-
-  // ---------- chapter 3: trade blocked ----------
-
-  $("trade-send").addEventListener("click", () => {
-    if (state.tradeLocked) return;
-    state.tradeLocked = true;
-    $("trade-send").disabled = true;
-    const panel = $("trade");
-    if (!reducedMotion) {
-      panel.classList.remove("shake");
-      void panel.offsetWidth;
-      panel.classList.add("shake");
-    }
-    $("trade-alert").hidden = false;
-    record("lock", { who: "studio", k: "Trade blocked", locked: true, text: "gold that can't move is worth nothing" }, "trading locked");
-    pouch.lock(true);
     pouch.hint();
-    setTimeout(() => {
-      $("trade-after").hidden = false;
-      openGate("after-send");
-    }, pause(900));
+  }
+
+  const BANK = {
+    voice: { gold: 300000, hours: 15, text: "signed the petition, kept playing", note: "+300,000 gold · 15 h to the studio",
+      result: "Your name goes on the list with thousands of others. For a long time, nothing happens." },
+    quiet: { gold: 1000000, hours: 40, text: "kept your head down and kept grinding", note: "+1,000,000 gold · 40 h to the studio",
+      result: "You grind on. The gold piles up in a pouch you can't trade from. The studio's dashboard has no idea you're angry." },
+    grey: { banned: true, grey: 3, text: "paid a seller $3 to dodge the limit: banned", note: "account banned · $3 to a gold seller",
+      result: "The seller moves your gold through a chain of bot accounts. Two weeks later the studio bans the whole chain, yours included." },
+    leave: { text: "left the game", note: "+0 · the studio lost a player",
+      result: "You quit. Your gold stays behind, locked, in a game you no longer play." },
+  };
+
+  decide("d-bank", (pick) => {
+    lockMove();
+    state.path.bank = pick;
+    const a = { ...BANK[pick] };
+    if (pick === "grey") a.gold = -sum("gold");
+    const back = state.path.leash === "leave" && (pick === "voice" || pick === "quiet");
+    record("bank", { who: "you", k: "The Tug of War", ...a, text: back ? `came back, ${a.text}` : a.text }, a.note);
+    showResult("r-bank", back ? `You come back for this. ${a.result}` : a.result);
+    afterBank();
   });
 
-  // ---------- chapter 3: the vote ----------
-  // The one choice in the piece that counts: the reader's vote joins the real result.
+  $("w-bank").addEventListener("click", () => {
+    if (state.path.bank) return;
+    lockMove();
+    state.path.bank = "banned";
+    $("w-bank").disabled = true;
+    afterBank();
+  });
 
+  function afterBank() {
+    const p = state.path;
+    const banned = bannedIn();
+    $("vote-you").textContent = banned ? "Your pouch stays empty. Banned accounts don't get a vote."
+      : p.bank === "voice" ? "One of those votes was yours. Your pouch is unlocked."
+      : p.bank === "leave" ? "You'd already left. Your pouch is unlocked, in a game you don't play."
+      : "You didn't vote. Other players did it for you. Your pouch is unlocked.";
+    $("keep-label").textContent = p.bank === "leave" ? "Neither. Stay away." : "Neither. Keep playing for free.";
+    if (banned) benchAt("d-exchange", "b-exchange");
+    setTimeout(() => openGate("after-d2"), pause(700));
+  }
+
+  // The reader's vote isn't asked for here: it was given (or not) in their answer above.
   const VOTE_TOTAL = 1234658;
-  const voteButtons = document.querySelectorAll("#vote [data-vote]");
-  voteButtons.forEach((btn) => btn.addEventListener("click", () => {
-    if (state.vote) return;
-    state.vote = btn.dataset.vote;
-    voteButtons.forEach((b) => { b.disabled = true; b.classList.toggle("picked", b === btn); });
+
+  function voteMove() {
+    if (ledger.has("vote")) return;
     const bars = $("vote-bars");
-    bars.hidden = false;
-    bars.querySelector(`[data-opt="${state.vote}"]`).classList.add("you");
+    bars.querySelector('[data-opt="Yes"]').classList.toggle("you", state.path.bank === "voice");
     void bars.offsetWidth;
     bars.classList.add("grow");
     countUp($("vote-count"), 0, VOTE_TOTAL, 1800);
-    setTimeout(() => {
-      record("vote", { who: "players", k: "The vote", unlocks: true, text: `${fmt(VOTE_TOTAL)} votes brought trade back (you: ${state.vote})` }, "voted trading back");
-      pouch.lock(false);
-      openGate("after-vote");
-    }, pause(2000));
-  }));
-
-  // ---------- chapter 4: the Bond ----------
-  // The pouch gets a grey "$ ???" line. It isn't explained; the finale fills it in.
-
-  function showUsd() {
-    const line = $("pouch-usd");
-    if (!line.hidden) return;
-    line.hidden = false;
-    pouch.hint();
+    const banned = bannedIn();
+    record("vote", {
+      who: "players", k: "The vote", unlocks: true,
+      text: banned ? `${fmt(VOTE_TOTAL)} votes brought trade back, but not for you` : `${fmt(VOTE_TOTAL)} votes brought trade back${state.path.bank === "voice" ? ", yours among them" : ""}`,
+    }, banned ? null : "voted trading back");
   }
 
-  // ---------- chapter 4: the price tag ----------
-  // One click turns every price into dollars at the Bond's rate and moves the page into the paper phase.
-  // The button stays, greyed out: clicking it again only says you can't go back.
-
-  const BOND_GOLD = 9559197;
-  const BOND_USD = 9.99;
-  const usd = (gold) => {
-    const v = (gold * BOND_USD) / BOND_GOLD;
-    if (v === 0) return "$0";
-    return v >= 0.01 ? `$${v.toFixed(2)}` : `$${v.toPrecision(2)}`;
-  };
+  // ---------- chapter 4: the Bond, the shop, your answer ----------
+  // From the Bond on, the pouch shows dollars. The shop flips to dollars by itself: there's no going back.
 
   function setPhase(phase) {
     state.phase = phase;
     document.body.dataset.phase = phase;
   }
 
+  // On the reader's server a Bond sells for more gold than the real one: prices are up since the double drops.
+  const GREY_SHARE = 0.6;
+  const bondGold = () => Math.round(BOND_GOLD / valueOf());
+  const freeUsd = () => toUsd(sum("gold") * valueOf());
+
+  function bondMove() {
+    if (ledger.has("bond")) return;
+    voteMove();
+    state.priced = true;
+    record("bond", { who: "studio", k: "The Bond", text: "opened its own counter: gold now has a dollar price" }, `your pouch: ≈ ${usd(usdOf())}`);
+    $("offer-bond").textContent = `${fmt(bondGold())} gold`;
+    $("offer-grey").textContent = `${dollars(freeUsd() * GREY_SHARE)} cash`;
+  }
+
   function flipPrice(item) {
     const price = item.querySelector(".price");
     const swap = () => {
       item.querySelector(".was").textContent = price.textContent;
-      price.textContent = usd(Number(item.dataset.gp));
+      price.textContent = usd(toUsd(Number(item.dataset.gp)));
       item.classList.add("in-usd");
     };
     if (reducedMotion) { swap(); return; }
@@ -999,114 +566,238 @@
     };
   }
 
-  const usdButton = $("show-usd");
-  usdButton.addEventListener("click", () => {
-    if (state.pricesInUsd) {
-      $("usd-tip").classList.add("show");
-      if (!reducedMotion) usdButton.animate([{ transform: "translateX(-6px)" }, { transform: "translateX(6px)" }, { transform: "none" }], { duration: 250 });
-      return;
-    }
-    state.pricesInUsd = true;
-    usdButton.textContent = "[ SHOW PRICES IN GOLD ]";
-    usdButton.setAttribute("aria-disabled", "true");
-    $("usd-tip").textContent = "You can't unsee it.";
-    $("shop-unit").textContent = "IN US DOLLARS";
-    document.querySelectorAll("#shop .item").forEach((item, i) => setTimeout(() => flipPrice(item), pause(250 * i)));
+  let flipped = false;
+  function flipShop() {
+    bondMove();
     setPhase("paper");
-    showUsd();
-    record("bond", { who: "studio", k: "The Exchange", text: "its own counter put a $ price on your gold" }, `your pouch: ≈ ${usd(pouchWorth())}`);
-    setTimeout(() => {
-      $("usd-after").hidden = false;
-      openGate("after-usd");
-    }, pause(1400));
+    if (flipped) return;
+    flipped = true;
+    $("shop-unit").textContent = "IN US DOLLARS";
+    document.querySelectorAll("#shop .item").forEach((item, i) => setTimeout(() => flipPrice(item), pause(700 + 250 * i)));
+    setTimeout(() => { $("usd-after").hidden = false; updatePager(); }, pause(1900));
+  }
+
+  const EXCHANGE = {
+    bond: () => ({
+      gold: bondGold(), paid: BOND_USD, hours: 10, text: "bought a Bond and sold it for gold", note: `+${fmt(bondGold())} gold · $9.99 to the studio`,
+      result: `Ten minutes and $9.99 later, you have ${fmt(bondGold())} more gold. It came from another player, who paid it for your Bond. The studio kept the $9.99.`,
+    }),
+    sell: () => {
+      const gold = sum("gold");
+      const full = freeUsd();
+      const cash = full * GREY_SHARE;
+      return {
+        gold: -gold, cash, grey: full - cash, banned: true, text: `sold ${fmt(gold)} gold to the grey market: banned`, note: `${dollars(cash)} cash · account banned`,
+        result: `The cash arrives. A week later, so does the ban: the buyer was a bot ring, and the studio followed the gold. The ring sells it on for ${dollars(full)}.`,
+      };
+    },
+    keep: () => (state.path.bank === "leave"
+      ? { text: "stayed away", note: "+0 · still gone", result: "You stay away. The studio's counters stay open without you." }
+      : { gold: 700000, hours: 20, text: "kept playing, wallet shut", note: "+700,000 gold · 20 h to the studio", result: "You keep playing and keep your wallet shut. The studio still gets your hours." }),
+  };
+
+  decide("d-exchange", (pick) => {
+    bondMove();
+    state.path.exchange = pick;
+    const a = EXCHANGE[pick]();
+    record("exchange", { who: "you", k: "The Exchange", ...a }, a.note);
+    showResult("r-exchange", a.result);
+    finish();
   });
 
-  // ---------- finale: the receipt ----------
-  // Printed line by line from `state`, so every reader's receipt is a little different.
+  $("w-exchange").addEventListener("click", () => {
+    if (state.path.exchange) return;
+    bondMove();
+    state.path.exchange = "banned";
+    $("w-exchange").disabled = true;
+    finish();
+  });
 
-  // Each line carries the pouch's running value in dollars, hidden until REVEAL.
-  function receiptLines() {
-    const entries = [...ledger.values()];
-    return entries.map((e, i) => {
-      const so = entries.slice(0, i + 1);
-      const change = [e.gold ? `+${fmt(e.gold)} gold` : "", e.value !== 1 ? pct(e.value) : ""].filter(Boolean).join(" · ");
-      return { ...e, change, run: usd(worthOf(so)) };
-    });
+  // ---------- the ending ----------
+  // Fixed by the three answers, checked in this order. Each one says plainly why it happened.
+
+  const ENDINGS = {
+    good: {
+      tone: "good", label: "GOOD ENDING", title: "Worth staying for",
+      text: "You played the game, not the shop, and when the studio locked you in, you answered with your name on a petition. Players like you won the vote. Your gold isn't worth much in dollars. It was never meant to be.",
+      real: "This one really happened: in 2013, a petition and a vote brought back Old School RuneScape.",
+    },
+    favourite: {
+      tone: "mixed", label: "MIXED ENDING", title: "The studio's favourite",
+      text: "You have the sword and a fat pouch. The studio has your money, and it noticed. Next year the energy bar will be a little shorter, and the refills a little dearer.",
+      real: "“The price will keep going up, because we keep paying it.” In 2026, it did.",
+    },
+    treadmill: {
+      tone: "bad", label: "BAD ENDING", title: "On the treadmill",
+      text: "You did everything the studio asked. You logged in, put in the hours, and never complained. Other players won the vote that freed your gold. The studio's dashboard loves you. Did you have fun?",
+      real: "Remember that comment: “they know we won't stop playing.”",
+    },
+    away: {
+      tone: "mixed", label: "MIXED ENDING", title: "Walked away",
+      text: "You cut the leash. The studio lost a player, and a player leaving is the one signal every studio reads. But your gold stayed behind, and the game went on without you.",
+      real: "Leaving is the one vote the studio always counts.",
+    },
+    banned: {
+      tone: "bad", label: "BAD ENDING", title: "Banned",
+      text: "",
+      real: "In 2013 alone, Jagex banned 1.1 million gold-farming accounts.",
+    },
+  };
+
+  function endingId() {
+    const p = state.path;
+    if (bannedIn()) return "banned";
+    if (p.bank === "leave" && p.exchange === "keep") return "away";
+    if (p.leash === "pay" || p.exchange === "bond") return "favourite";
+    if (p.bank === "voice") return "good";
+    return "treadmill";
   }
 
-  // Who moved the pouch, counted from the ledger (lines that changed nothing still count as decisions).
-  function decidedBy() {
-    const n = { studio: 0, director: 0, players: 0 };
-    ledger.forEach((e) => { n[e.who] += 1; });
-    return n;
+  function bannedText() {
+    const p = state.path;
+    const how = p.leash === "grey"
+      ? "The cheapest gold in the game came from bots, and the studio followed it to you. The seller kept your $2."
+      : p.bank === "grey"
+        ? "The seller dodged the trade limit with bot accounts, and when the studio banned them, it banned you too. The seller kept your $3."
+        : `You walked off with ${dollars(sum("cash"))} in cash. The bot ring that bought your gold sold it on at a profit.`;
+    return `${how} The studio lost a player, you lost the game, and the grey market got paid. That's why it's both sides' enemy.`;
   }
 
-  let printed = false;
-  function printReceipt() {
-    if (printed) return;
-    printed = true;
-    const list = $("receipt-lines");
-    const lines = receiptLines();
-    lines.forEach((line, i) => setTimeout(() => {
-      const li = document.createElement("li");
-      const span = (cls, text) => { const el = document.createElement("span"); el.className = cls; el.textContent = text; return el; };
-      li.append(span("k", line.k), span(`who-tag ${line.who}`, WHO[line.who]), span("v", line.change ? `${line.text} (${line.change})` : line.text), span("run", "$ ???"));
-      li.querySelector(".run").dataset.usd = line.run;
-      list.appendChild(li);
-    }, pause(600 + 450 * i)));
-    setTimeout(() => {
-      const n = decidedBy();
-      $("receipt-who").textContent = `STUDIO ${n.studio} · YOU, AS THE STUDIO ${n.director} · PLAYERS ${n.players}`;
-      $("receipt-total").textContent = `${fmt(ledgerGold())} gold`;
-      $("receipt").classList.add("totalled");
-      $("reveal").disabled = false;
-    }, pause(600 + 450 * lines.length + 300));
-  }
-
-  $("reveal").addEventListener("click", () => {
-    if (state.revealed) return;
-    state.revealed = true;
-    $("reveal").disabled = true;
-    const worth = `≈ ${usd(pouchWorth())}`;
-    $("receipt-usd").textContent = worth;
-    $("receipt").classList.add("revealed");
-    document.querySelectorAll("#receipt-lines .run").forEach((el, i) => setTimeout(() => { el.textContent = el.dataset.usd; }, pause(150 * i)));
-    $("pouch-usd").textContent = worth;
+  function finish() {
+    const id = endingId();
+    const e = ENDINGS[id];
+    state.ending = id;
+    state.endingsFound.add(id);
+    $("ending").className = `ending ${e.tone}`;
+    $("ending-label").textContent = e.label;
+    $("ending-title").textContent = e.title;
+    $("ending-text").textContent = id === "banned" ? bannedText() : e.text;
+    $("ending-real").textContent = e.real;
+    $("ending-found").textContent = `Endings found: ${state.endingsFound.size} of ${Object.keys(ENDINGS).length}`;
+    fillHour();
     fillWorth();
-    pouch.hint();
-    setTimeout(() => openGate("after-reveal"), pause(900));
-  });
+    fillCounts();
+    fillTurn();
+    setTimeout(() => openGate("after-d3"), pause(700));
+  }
 
-  // What it's worth: the heading, the numbers and the farmer's hours all follow the reader's own pouch.
+  // ---------- the last chapter, filled in from the ledger ----------
+
+  function fillHour() {
+    const h = sum("hours");
+    const v = usdOf();
+    $("hour-you").hidden = !(h > 0 && v > 0);
+    $("hour-you").textContent = `In this story you put in ${h} hours and ended up with ${usd(v)}: about ${((v / h) * 100).toFixed(1)}¢ an hour.`;
+  }
+
+  // A Venezuelan farmer's day in 2017: about $2.50 for 12 hours or more.
   const FARM_DAY_USD = 2.5;
   const FARM_DAY_HOURS = 12;
 
   function fillWorth() {
-    const dollars = (pouchWorth() * BOND_USD) / BOND_GOLD;
-    const worth = `≈ ${usd(pouchWorth())}`;
-    $("worth-head").textContent = dollars >= 0.9 && dollars <= 1.2 ? "About one dollar." : `About ${usd(pouchWorth())}.`;
-    $("worth-again").textContent = worth;
-    $("pouch-worth").textContent = worth;
-    const hours = (dollars / FARM_DAY_USD) * FARM_DAY_HOURS;
+    const v = usdOf();
+    const banned = bannedIn();
+    const cash = sum("cash");
+    $("worth-head").textContent = v === 0 ? "Nothing." : v >= 0.9 && v <= 1.2 ? "About one dollar." : `About ${usd(v)}.`;
+    $("pouch-worth").textContent = `≈ ${usd(v)}`;
+    $("pouch-worth-d").textContent = banned ? "the account is banned" : "at the Bond's rate";
+    $("worth-text").textContent = banned
+      ? `A banned account's gold is worth nothing, at any rate.${cash ? ` You did take ${dollars(cash)} home.` : ""}`
+      : `At the Bond's rate, $9.99 buys about 9.6 million gold, so a million gold is worth roughly a bottle of water. Your ${fmt(sum("gold"))} gold, after the double drops, comes to ${usd(v)}.`;
+    const hours = (v / FARM_DAY_USD) * FARM_DAY_HOURS;
     const mins = Math.round(hours * 60);
-    $("worth-work").textContent = hours >= 1.5 ? `about ${Math.round(hours)} hours of work`
+    const work = hours >= 1.5 ? `about ${Math.round(hours)} hours of work`
       : mins >= 60 ? "about an hour of work"
-      : mins >= 2 ? `about ${mins} minutes of work`
-      : "less than a couple of minutes of work";
-    const n = decidedBy();
-    $("count-studio").textContent = n.studio === 1 ? "once" : `${n.studio} times`;
-    $("count-players").textContent = n.players === 1 ? "once" : `${n.players} times`;
+      : `about ${Math.max(1, mins)} minutes of work`;
+    $("worth-turn").textContent = v === 0
+      ? "To a gold farmer in Venezuela in 2017, $2–3 was a whole day's pay. Your gold went to the bots instead."
+      : `To you, maybe not much. To a gold farmer in Venezuela in 2017, it was ${work}.`;
   }
 
-  // ---------- finale: your turn ----------
-  // No right answer: picking one only shows what that choice costs.
+  function fillCounts() {
+    const n = { studio: 0, you: 0, players: 0 };
+    ledger.forEach((e) => { n[e.who] += 1; });
+    $("count-line").textContent = `Look at your receipt again. The studio moved ${times(n.studio)}, the players ${times(n.players)}, and you ${times(n.you)}. Every one of your moves was an answer to one of the studio's.`;
+  }
 
-  const turnButtons = document.querySelectorAll("#your-turn [data-turn]");
-  turnButtons.forEach((btn) => btn.addEventListener("click", () => {
-    state.yourTurn = btn.dataset.turn;
-    turnButtons.forEach((b) => b.classList.toggle("picked", b === btn));
-    document.querySelectorAll("[data-cost]").forEach((p) => { p.hidden = p.dataset.cost !== state.yourTurn; });
-  }));
+  function fillTurn() {
+    const p = state.path;
+    const took = [p.leash === "grey", p.bank === "grey", p.exchange === "sell"].some(Boolean);
+    const offers = 1 + (p.bank !== "banned") + (p.exchange !== "banned");
+    $("turn-you").textContent = took ? "You already did, in this story. It cost you the account." : `In this story you were offered it ${times(offers)}, and said no every time.`;
+    $("turn-cost").textContent = took ? "And your money paid for the bots and the cheats, in the game you came to enjoy."
+      : p.leash === "pay" || p.exchange === "bond" ? "So you paid the studio instead, and the farmers sold to someone else."
+      : "So you paid in hours instead, and the farmers sold to someone else.";
+  }
+
+  // ---------- finale: the receipt ----------
+  // Printed line by line from the ledger, with what the pouch was worth after each move.
+
+  function changeOf(e) {
+    return [
+      e.gold ? `${e.gold > 0 ? "+" : "−"}${fmt(Math.abs(e.gold))} gold` : "",
+      e.value && e.value !== 1 ? pct(e.value) : "",
+      e.hours ? `${e.hours} h to studio` : "",
+      e.paid ? `${dollars(e.paid)} to studio` : "",
+      e.grey ? `${dollars(e.grey)} to grey market` : "",
+      e.cash ? `${dollars(e.cash)} cash` : "",
+    ].filter(Boolean).join(" · ");
+  }
+
+  let printed = false;
+  function printReceipt() {
+    if (!state.ending) return false;
+    if (printed) return;
+    printed = true;
+    const list = $("receipt-lines");
+    list.replaceChildren();
+    const all = entries();
+    const span = (cls, text) => { const el = document.createElement("span"); el.className = cls; el.textContent = text; return el; };
+    all.forEach((e, i) => setTimeout(() => {
+      const li = document.createElement("li");
+      const change = changeOf(e);
+      li.append(span("k", e.k), span(`who-tag ${e.who}`, WHO[e.who]), span("v", change ? `${e.text} (${change})` : e.text), span("run", usd(usdOf(all.slice(0, i + 1)))));
+      list.appendChild(li);
+    }, pause(500 + 350 * i)));
+    setTimeout(() => {
+      const cash = sum("cash");
+      const grey = sum("grey");
+      $("score-you").textContent = `${fmt(sum("gold"))} gold ≈ ${usd(usdOf())}${cash ? ` + ${dollars(cash)} cash` : ""}`;
+      $("score-studio").textContent = `${fmt(sum("hours"))} hours · ${dollars(sum("paid"))}`;
+      $("score-grey-row").hidden = grey === 0;
+      $("score-grey").textContent = dollars(grey);
+      $("receipt-ending").textContent = ENDINGS[state.ending].title;
+      $("receipt").classList.add("totalled");
+    }, pause(500 + 350 * all.length + 300));
+  }
+
+  // ---------- finale: play again ----------
+  // Back to chapter 2 with the same login and the same double drops; everything after is undone.
+
+  $("replay").addEventListener("click", () => {
+    ["leash", "lock", "bank", "vote", "bond", "exchange"].forEach((k) => ledger.delete(k));
+    state.path = { leash: null, bank: null, exchange: null };
+    state.priced = false;
+    state.ending = null;
+    ["d-leash", "d-bank", "d-exchange"].forEach(resetDecision);
+    ["r-leash", "r-bank", "r-exchange", "b-bank", "b-exchange"].forEach((id) => { $(id).hidden = true; });
+    ["w-bank", "w-exchange"].forEach((id) => { $(id).disabled = false; });
+    $("vote-bars").classList.remove("grow");
+    $("vote-count").textContent = "0";
+    printed = false;
+    $("receipt-lines").replaceChildren();
+    $("receipt").classList.remove("totalled");
+    document.body.classList.remove("logged-out");
+    $("logout-btn").disabled = false;
+    $("logout-after").hidden = true;
+    ["after-d1", "after-d2", "after-d3"].forEach((id) => { $(id).hidden = true; });
+    setPhase("game");
+    pouch.draw();
+    pouch.say("you", "back to chapter 2");
+    document.querySelectorAll("#after-d1 .screen[data-on-reveal]").forEach((s) => revealObserver.observe(s));
+    $("move-leash").scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
+    updatePager();
+  });
 
   // ---------- finale: log out ----------
   // The pouch fades away and the page goes dark. The sources wait below.

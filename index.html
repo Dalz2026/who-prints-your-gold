@@ -12,8 +12,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700&family=IBM+Plex+Mono:wght@400;600&family=Silkscreen&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/theme.css?v=3">
-<link rel="stylesheet" href="css/page.css?v=3">
+<link rel="stylesheet" href="css/theme.css?v=4">
+<link rel="stylesheet" href="css/page.css?v=4">
 </head>
 <body data-phase="game">
 
@@ -27,7 +27,9 @@
   <span class="label">COIN POUCH</span>
   <span class="amount" id="pouch-amount" aria-live="polite">0</span>
   <span class="sub" id="pouch-sub"></span>
-  <span class="usd" id="pouch-usd" hidden>$ ???</span>
+  <span class="usd" id="pouch-usd" hidden></span>
+  <span class="take" id="pouch-take"></span>
+  <span class="take grey" id="pouch-grey" hidden></span>
   <span class="log" id="pouch-log" aria-live="polite"></span>
 </aside>
 
@@ -102,8 +104,8 @@
 
 <section class="screen" data-station="start" data-toc="Your route" data-on-reveal="pouch">
   <div class="text wide">
-    <p>By the end of this page, you'll find out what your gold is worth in real money.</p>
-    <p>Keep an eye on your pouch. It will change.</p>
+    <p>You're a player now. In every chapter the studio makes a move on your gold, and from chapter 2 on, you get to answer.</p>
+    <p>Your pouch keeps score for both sides: what your gold is worth, and what the studio has got from you. By the end, you'll know what it all comes to in real money.</p>
     <p class="kicker map-title">Your route</p>
     <ol class="route-map">
       <li class="panel"><span class="n">1</span><b>The Mint</b><span>where gold comes from</span></li>
@@ -171,58 +173,23 @@
   </div>
 </section>
 
-<section class="screen" data-station="mint" data-toc="Run the server">
-  <div class="text wide">
-    <p>Your turn. You run a small server for 30 days.</p>
-    <p>Keep the price of a sword between 80 and 120 gold. Players are watching.</p>
-
-    <div class="panel sim" id="sim">
-      <div class="sim-top">
-        <span id="sim-day">DAY 0 / 30</span>
-        <span id="sim-price">SWORD: 100 gold</span>
+<section class="screen" data-station="mint" id="move-mint" data-toc="The studio's move" data-on-reveal="mint">
+  <div class="text">
+    <div class="panel move">
+      <p class="move-head"><span class="who-tag studio">STUDIO'S MOVE</span><span>MONTH 1</span></p>
+      <div class="meeting">
+        <p><b>VERA · FINANCE</b> Players are bored. Double the gold drops for a month. That'll bring them back.</p>
+        <p><b>SAM · COMMUNITY</b> And when everyone has twice the gold?</p>
+        <p><b>VERA · FINANCE</b> Then everything costs more. That's next month's problem.</p>
       </div>
-      <svg class="sim-chart" id="sim-chart" viewBox="0 0 300 150" preserveAspectRatio="none" role="img" aria-label="Sword price over 30 days">
-        <rect id="sim-band" x="0" y="0" width="300" height="0" class="band"/>
-        <polyline id="sim-line" class="line" points=""/>
+      <p class="move-do">&gt; set drop_rate x2 --days 30</p>
+      <svg class="sim-chart mint-chart" id="mint-chart" viewBox="0 0 300 100" preserveAspectRatio="none" role="img" aria-label="Sword price rising from 100 to 143 gold over the month">
+        <polyline class="line" points="0,90 30,89 60,86 90,80 120,72 150,62 180,52 210,42 240,34 270,28 300,24"/>
       </svg>
-      <div class="sim-events" id="sim-events" aria-live="polite"></div>
-      <div class="sim-controls">
-        <label>TAP <small>drops</small>
-          <input type="range" id="sim-tap" min="0" max="100" value="50">
-        </label>
-        <label>DRAIN <small>repairs, tax</small>
-          <input type="range" id="sim-drain" min="0" max="100" value="50">
-        </label>
-      </div>
-      <div class="chat sim-chat" id="sim-chat" aria-live="polite"><span class="muted">The server is quiet.</span></div>
-      <p class="actions">
-        <button class="btn" id="sim-start">[ START ]</button>
-        <button class="skip" id="sim-skip">skip</button>
-      </p>
+      <p class="chart-cap"><span>SWORD PRICE · DAY 0 → 30</span><span id="mint-price">100 gold</span></p>
     </div>
-  </div>
-</section>
-
-<!-- Everything after the simulation waits until the reader has run (or skipped) it. -->
-<div id="after-sim" hidden>
-
-<section class="screen" data-station="mint" id="sim-result" data-toc="Server report">
-  <div class="text wide">
-    <div class="panel report">
-      <p class="report-head"><span>SERVER REPORT</span><span>DAY 30 / 30</span></p>
-      <p class="display verdict" id="rep-verdict"></p>
-      <div class="stats">
-        <div class="stat" id="rep-price-box"><span class="k">SWORD PRICE</span><span class="v" id="rep-price">100</span><span class="d" id="rep-price-d"></span></div>
-        <div class="stat" id="rep-players-box"><span class="k">PLAYERS</span><span class="v" id="rep-players">1,000</span><span class="d" id="rep-players-d"></span></div>
-        <div class="stat" id="rep-swords-box"><span class="k">YOUR GOLD BUYS</span><span class="v" id="rep-swords">10,000</span><span class="d">swords · was 10,000</span></div>
-      </div>
-      <svg class="sim-chart report-chart" viewBox="0 0 300 150" preserveAspectRatio="none" aria-hidden="true">
-        <rect id="rep-band" x="0" y="0" width="300" height="0" class="band"/>
-        <polyline id="rep-line" class="line" points=""/>
-      </svg>
-    </div>
-    <p class="report-text" id="sim-result-text"></p>
-    <p class="report-pouch">Check your pouch.</p>
+    <p class="move-you"><span class="who-tag you">YOUR MOVE</span> None. Drop rates aren't put to a vote.</p>
+    <p class="turn">Your pouch still says 1,000,000. It just buys 7,000 swords now, not 10,000.</p>
   </div>
 </section>
 
@@ -275,7 +242,7 @@
 </section>
 
 <!-- ===================== CHAPTER 2: THE LEASH ===================== -->
-<!-- The studio wants your time; you want to be free. Two interactions, one from each side: the dailies (player) and the studio story (director). -->
+<!-- The studio wants your time; you want to be free. The first decision: how to answer the leash. -->
 
 <section class="screen chapter-head" id="ch-leash" data-station="leash" data-toc-chapter="The Leash">
   <div class="text">
@@ -373,54 +340,30 @@
   </div>
 </section>
 
-<section class="screen" data-station="leash" id="dailies-screen" data-toc="Your dailies">
+<section class="screen" data-station="leash" id="move-leash" data-toc="The sword">
   <div class="text">
-    <p>Try it. Here are today's tasks.</p>
-    <figure class="panel dailies" id="dailies">
-      <p class="dailies-head"><span>DAILY TASKS</span><span id="dailies-reset">resets in 23:59:59</span></p>
-      <ul class="tasks">
-        <li class="task done"><span class="tick" aria-hidden="true"></span><span class="t">Log in</span><span class="p">1 / 1</span></li>
-        <li class="task" data-task="logs" data-need="10"><span class="tick" aria-hidden="true"></span><span class="t">Chop 10 logs</span><span class="p">0 / 10</span><button class="btn small" data-act="logs" disabled>[ CHOP ]</button></li>
-        <li class="task" data-task="goblins" data-need="6"><span class="tick" aria-hidden="true"></span><span class="t">Defeat 6 goblins</span><span class="p">0 / 6</span><button class="btn small" data-act="goblins" disabled>[ FIGHT ]</button></li>
-      </ul>
-      <div class="energy"><span class="k">ENERGY</span><span class="track"><span class="fill" id="energy-fill"></span></span><span class="v" id="energy-num">12 / 12</span></div>
-      <p class="reward" id="dailies-reward">Finish all three: <b>+600 gold</b></p>
-      <div class="dailies-out" id="dailies-out" hidden>
-        <p class="alert">Out of energy. It refills tomorrow.</p>
-        <p class="actions">
-          <button class="btn" id="refill">[ REFILL NOW · $1.99 ]</button>
-          <button class="btn" id="wait">[ COME BACK TOMORROW ]</button>
-        </p>
+    <div class="panel move">
+      <p class="move-head"><span class="who-tag studio">STUDIO'S MOVE</span><span>MONTH 2</span></p>
+      <div class="meeting">
+        <p><b>VERA · FINANCE</b> Hours played are falling. Make the Ember Sword rare, and cap play with an energy bar.</p>
+        <p><b>SAM · COMMUNITY</b> Players will hate it.</p>
+        <p><b>VERA · FINANCE</b> They'll hate it and keep logging in. Sell refills for $1.99.</p>
       </div>
-    </figure>
-    <p class="actions" id="dailies-actions"><button class="btn" id="dailies-start">[ START ]</button> <button class="skip" id="dailies-skip">skip</button></p>
-    <div id="dailies-after" hidden>
-      <p class="tip show" id="dailies-note"></p>
-      <p class="turn">That's the leash: a list just too long for your energy, and a button to pay your way past it.</p>
+      <div class="chat"><div><span class="who">gp4u_7731: </span>4M GOLD ONLY $2 ★ FAST DELIVERY</div></div>
     </div>
+    <p>You want that sword. It now costs 4,000,000 gold on the market, and with the energy bar, earning that takes three weeks.</p>
+    <p class="move-you"><span class="who-tag you">YOUR MOVE</span></p>
+    <div class="choices one decide" id="d-leash">
+      <button class="btn" data-pick="grind">Grind it out. Three weeks of evenings.</button>
+      <button class="btn" data-pick="pay">Pay $1.99 a time to refill the energy bar.</button>
+      <button class="btn" data-pick="grey">Buy the gold from that seller for $2.</button>
+      <button class="btn" data-pick="leave">Not worth it. Log off for a while.</button>
+    </div>
+    <p class="result" id="r-leash" aria-live="polite" hidden></p>
   </div>
 </section>
 
-<div id="after-dailies" hidden>
-
-<section class="screen story-screen" data-station="leash" id="story-screen" data-toc="Your studio">
-  <div class="text">
-    <p>Now switch sides. You've just been made director of the game your pouch comes from. Call it <i>Emberfall</i>: ten years old, and losing players. Your choices decide how its story ends, and what your gold is worth after it. <span class="muted">(Emberfall is made up. The pressures aren't.)</span></p>
-    <figure class="panel story" id="story">
-      <div class="meters">
-        <div class="meter" data-m="players"><span class="k">PLAYERS</span><span class="track"><span class="fill"></span></span></div>
-        <div class="meter" data-m="trust"><span class="k">PLAYER TRUST</span><span class="track"><span class="fill"></span></span></div>
-        <div class="meter" data-m="cash"><span class="k">STUDIO CASH</span><span class="track"><span class="fill"></span></span></div>
-      </div>
-      <p class="story-scene" id="story-scene">YOUR FIRST DAY</p>
-      <div class="story-lines" id="story-lines" aria-live="polite"><p class="muted">The board is waiting.</p></div>
-      <div class="story-choices" id="story-choices"></div>
-    </figure>
-    <p class="actions" id="story-actions"><button class="btn" id="story-start">[ TAKE THE JOB ]</button> <button class="skip" id="story-skip">skip</button></p>
-  </div>
-</section>
-
-<div id="after-story" hidden>
+<div id="after-d1" hidden>
 
 <section class="screen" data-station="leash" data-toc="It can be done">
   <div class="text">
@@ -446,7 +389,7 @@
 </section>
 
 <!-- ===================== CHAPTER 3: THE TUG OF WAR ===================== -->
-<!-- Each interaction in this chapter is a gate: what follows stays hidden until the reader acts. -->
+<!-- The studio locks trading; the second decision is how you answer; then the players vote. -->
 
 <section class="screen chapter-head" id="ch-bank" data-station="bank" data-toc-chapter="The Tug of War">
   <div class="text">
@@ -459,38 +402,19 @@
   </div>
 </section>
 
-<section class="screen" data-station="bank" data-toc="Crisis room">
-  <div class="text wide">
-    <p>It's late 2007. You run <i>RuneScape</i>.</p>
-    <p>Gold sellers are everywhere. Bot accounts farm coins around the clock, and players buy them for real money on outside websites.</p>
-    <div class="panel crisis" id="crisis">
-      <div class="chat crisis-chat" id="crisis-chat" aria-live="polite">
-        <div><span class="who">gp4u_7731: </span>CHEAP GP ★ FAST DELIVERY ★ BEST PRICE</div>
-        <div><span class="who">lumbridge_lad: </span>can a mod do something about these bots</div>
-        <div><span class="who">gp4u_7732: </span>CHEAP GP ★ FAST DELIVERY ★ BEST PRICE</div>
-      </div>
-      <p class="crisis-q">What do you do?</p>
-      <div class="choices">
-        <button class="btn" data-choice="ban">Ban the bots</button>
-        <button class="btn" data-choice="limit">Limit trading</button>
-        <button class="btn" data-choice="sell">Sell gold ourselves</button>
-        <button class="btn" data-choice="nothing">Do nothing</button>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div id="after-crisis" hidden>
-
-<section class="screen" data-station="bank" id="crisis-result" data-toc="Decided for everyone">
+<section class="screen" data-station="bank" id="move-bank" data-toc="The studio's move" data-on-reveal="lock">
   <div class="text">
-    <p class="picked-line" id="crisis-picked"></p>
-    <p class="display line-big">It doesn't matter what you picked.</p>
-    <p>On 10 December 2007, Jagex decided for everyone. Any trade where one side gave more than 3,000 gold in value would be blocked.</p>
+    <p>It's late 2007, and gold sellers are everywhere in <i>RuneScape</i>. Bot accounts farm coins around the clock, and players buy them on outside websites.</p>
+    <div class="panel move">
+      <p class="move-head"><span class="who-tag studio">STUDIO'S MOVE</span><span>10 DECEMBER 2007</span></p>
+      <p class="move-do">&gt; block trade --unbalanced-over 3000 --all</p>
+      <p class="alert">✕ Any trade where one side gives more than 3,000 gold in value is blocked.</p>
+    </div>
     <blockquote class="quote">
       “To remove real-world trading from RuneScape, we must stop the gold sellers' ability to function.”
       <cite>Jagex, 2007</cite>
     </blockquote>
+    <p class="turn" id="lock-you">Your gold can't move. You can't give it, lend it, or sell it fairly.</p>
     <aside class="source">
       <span class="name">Source · Jagex, 2007</span>
       RuneScape Wiki, <a href="https://runescape.wiki/w/Update:Trade_and_Drop_Changes" target="_blank" rel="noopener">“Update:Trade and Drop Changes”</a>
@@ -498,52 +422,46 @@
   </div>
 </section>
 
-<section class="screen" data-station="bank" data-toc="Trade blocked">
+<section class="screen" data-station="bank" id="move-bank-you" data-toc="Your answer">
   <div class="text">
-    <p>Try it. Send 50,000 gold to a friend.</p>
-    <div class="panel trade" id="trade">
-      <p class="trade-head">TRADING WITH: <b>friend</b></p>
-      <div class="trade-cols">
-        <div><span class="k">YOUR OFFER</span><span class="v">50,000 gold</span></div>
-        <div><span class="k">FRIEND'S OFFER</span><span class="v muted">nothing</span></div>
-      </div>
-      <p class="actions"><button class="btn" id="trade-send">[ SEND ]</button></p>
-      <p class="alert" id="trade-alert" role="alert" hidden>✕ Trade blocked: unbalanced by more than 3,000 gold.</p>
+    <p>The rule hit gold sellers. It also hit every honest player who wanted to give a friend a gift, pay back a loan, or make a fair trade.</p>
+    <div class="chat">
+      <div><span class="who">lumbridge_lad: </span>wait, I can't pay my brother back??</div>
+      <div><span class="who">fletch_master: </span>there's a petition going round. sign it</div>
+      <div><span class="who">gp4u_7731: </span>TRADE LIMIT? NO PROBLEM. WE MOVE YOUR GOLD $3 ★</div>
     </div>
-    <p id="trade-after" hidden>The rule hit gold sellers. It also hit every honest player who wanted to give a friend a gift, pay back a loan, or make a fair trade. Free trade was gone, for everyone.</p>
+    <p class="move-you"><span class="who-tag you">YOUR MOVE</span></p>
+    <div class="choices one decide" id="d-bank">
+      <button class="btn" data-pick="voice">Sign the petition. Vote if they ever ask.</button>
+      <button class="btn" data-pick="quiet">Keep your head down and keep grinding.</button>
+      <button class="btn" data-pick="grey">Pay the seller $3 to move your gold round the limit.</button>
+      <button class="btn" data-pick="leave">Leave the game.</button>
+    </div>
+    <div class="banned-note" id="b-bank" hidden>
+      <p class="alert">✕ ACCOUNT BANNED</p>
+      <p>Banned players don't get a move. You can only watch what happens next.</p>
+      <p class="actions"><button class="btn" id="w-bank">[ WATCH FROM OUTSIDE ]</button></p>
+    </div>
+    <p class="result" id="r-bank" aria-live="polite" hidden></p>
   </div>
 </section>
 
-<div id="after-send" hidden>
+<div id="after-d2" hidden>
 
-<section class="screen" data-station="bank" data-toc="The vote">
+<section class="screen" data-station="bank" data-toc="The vote" data-on-reveal="vote">
   <div class="text">
     <p>Three years later, something unusual happened. The central bank asked the people.</p>
-    <p>In a referendum running from 24 December 2010 to 14 January 2011, Jagex let players decide: should free trade come back?</p>
+    <p>In a referendum from 24 December 2010 to 14 January 2011, Jagex let players decide: should free trade come back?</p>
     <div class="panel vote" id="vote">
-      <p class="vote-q">Your vote:</p>
-      <div class="choices three">
-        <button class="btn" data-vote="Yes">Yes</button>
-        <button class="btn" data-vote="No">No</button>
-        <button class="btn" data-vote="Don't mind">Don't mind</button>
-      </div>
-      <div class="bars" id="vote-bars" hidden>
+      <div class="bars" id="vote-bars">
         <div class="bar" data-opt="Yes" style="--pct:91"><span class="lbl">Yes</span><span class="track"><span class="fill"></span></span><span class="pct">91%</span></div>
         <div class="bar" data-opt="No" style="--pct:7"><span class="lbl">No</span><span class="track"><span class="fill"></span></span><span class="pct">7%</span></div>
         <div class="bar" data-opt="Don't mind" style="--pct:2"><span class="lbl">Don't mind</span><span class="track"><span class="fill"></span></span><span class="pct">2%</span></div>
         <p class="vote-total"><span id="vote-count">0</span> votes</p>
       </div>
     </div>
-  </div>
-</section>
-
-<div id="after-vote" hidden>
-
-<section class="screen" data-station="bank" data-toc="Free trade returns">
-  <div class="text">
-    <p class="display line-big">1,234,658 votes. 91% said yes.</p>
     <p>On 1 February 2011, free trade returned.</p>
-    <p class="unlock-line">Your pouch is unlocked.</p>
+    <p class="unlock-line" id="vote-you"></p>
     <aside class="source">
       <span class="name">Source · RuneScape Wiki; Jagex, 2011</span>
       <a href="https://runescape.wiki/w/Wilderness_and_Free_Trade_Vote" target="_blank" rel="noopener">“Wilderness and Free Trade Vote”</a>;
@@ -586,7 +504,7 @@
 </section>
 
 <!-- ===================== CHAPTER 4: THE EXCHANGE ===================== -->
-<!-- One interaction: the price toggle. It only goes one way, and it moves the whole page into the paper phase. -->
+<!-- The Bond gives gold a dollar price (the pouch shows it from here); the third decision is which counter to use. -->
 
 <section class="screen chapter-head" id="ch-exchange" data-station="exchange" data-toc-chapter="The Exchange">
   <div class="text">
@@ -623,7 +541,7 @@
       <p class="display line-big">It opened its own counter.</p>
       <p>In September 2013, Jagex introduced the Bond. You buy one with real money. Then you can use it for membership, or sell it to another player for gold.</p>
       <p><i>Old School RuneScape</i> got its own Bonds in 2015. Today one costs $9.99. On the in-game market, it sells for about 9.6 million gold.</p>
-      <p class="turn">You might be doing the maths right now. Hold that thought.</p>
+      <p class="turn">Look at your pouch. From today, your gold has a price.</p>
       <aside class="source">
         <span class="name">Source · Jagex, 2013; OSRS Wiki</span>
         <a href="https://oldschool.runescape.wiki/w/Old_school_bond" target="_blank" rel="noopener">“Old school bond”</a>;
@@ -650,9 +568,9 @@
   </div>
 </section>
 
-<section class="screen" data-station="exchange" id="price-tag" data-toc="The price tag">
+<section class="screen" data-station="exchange" id="price-tag" data-toc="The price tag" data-on-reveal="prices">
   <div class="text wide">
-    <p>Here's a shop.</p>
+    <p>And so does everything in the shop.</p>
     <div class="panel shop" id="shop">
       <p class="shop-head"><span>GRAND EXCHANGE · GUIDE PRICES</span><span id="shop-unit">IN GOLD</span></p>
       <ul class="items">
@@ -673,10 +591,6 @@
           <span class="name">Old School Bond</span><span class="price">9,559,197 gold</span><span class="was"></span>
         </li>
       </ul>
-      <p class="actions">
-        <button class="btn" id="show-usd">[ SHOW PRICES IN $ ]</button>
-        <span class="tip" id="usd-tip" role="status"></span>
-      </p>
     </div>
     <div id="usd-after" hidden>
       <p class="turn">Every item you worked for now has a second price.</p>
@@ -691,7 +605,30 @@
   </div>
 </section>
 
-<div id="after-usd" hidden>
+<section class="screen" data-station="exchange" id="move-exchange" data-toc="Your answer">
+  <div class="text">
+    <p>Now there are two counters. The studio's sells you gold for dollars. The grey market's will buy your gold, for cash.</p>
+    <div class="panel offers">
+      <div class="offer"><span class="who-tag studio">STUDIO</span><span>A $9.99 Bond sells on your server for</span><b id="offer-bond">9,559,197 gold</b></div>
+      <div class="offer"><span class="who-tag grey">GREY MARKET</span><span>We buy all your gold for</span><b id="offer-grey">$0 cash</b></div>
+    </div>
+    <p class="move-you"><span class="who-tag you">YOUR MOVE</span></p>
+    <div class="choices one decide" id="d-exchange">
+      <button class="btn" data-pick="bond">Buy a Bond and sell it for gold.</button>
+      <button class="btn" data-pick="sell">Sell your gold to the grey market.</button>
+      <button class="btn" data-pick="keep" id="keep-label">Neither. Keep playing for free.</button>
+    </div>
+    <div class="banned-note" id="b-exchange" hidden>
+      <p class="alert">✕ ACCOUNT BANNED</p>
+      <p>A banned account can't use either counter.</p>
+      <p class="actions"><button class="btn" id="w-exchange">[ WATCH FROM OUTSIDE ]</button></p>
+    </div>
+    <p class="result" id="r-exchange" aria-live="polite" hidden></p>
+    <p class="muted small-note">The numbers in this story are simplified. The studio's moves in chapters 3 and 4 are real.</p>
+  </div>
+</section>
+
+<div id="after-d3" hidden>
 
 <section class="screen" data-station="exchange" data-toc="One-way door">
   <div class="text split">
@@ -777,6 +714,7 @@
         <span class="rate-note">a new player killing cows: 40 seconds a cow, 120 gold a hide (my own test, November 2026)</span>
       </div>
     </div>
+    <p id="hour-you" hidden></p>
     <p class="turn">And wherever an hour of play has a price, someone will be paid to play.</p>
   </div>
 </section>
@@ -806,7 +744,7 @@
 </section>
 
 <!-- ===================== CHAPTER 5: THE BILL ===================== -->
-<!-- Reaching this chapter moves the page into the receipt phase. The receipt prints from what the reader did. -->
+<!-- Reaching this chapter moves the page into the receipt phase. The receipt prints from the ledger; the ending follows from the three answers. -->
 
 <section class="screen chapter-head" id="ch-bill" data-station="bill" data-toc-chapter="The Bill" data-on-reveal="receipt">
   <div class="text">
@@ -824,26 +762,36 @@
     <div class="receipt" id="receipt" aria-live="polite">
       <p class="receipt-title">RECEIPT · WHO PRINTS YOUR GOLD?</p>
       <ol class="receipt-lines" id="receipt-lines"></ol>
-      <p class="receipt-total who"><span>DECIDED BY</span><span id="receipt-who">…</span></p>
-      <p class="receipt-total"><span>TOTAL</span><span id="receipt-total">…</span></p>
-      <p class="receipt-total usd"><span>IN US DOLLARS</span><span id="receipt-usd">$ ???</span></p>
-      <p class="receipt-actions"><button class="btn" id="reveal" disabled>[ REVEAL ]</button></p>
+      <p class="receipt-total"><span>YOU KEPT</span><span id="score-you">…</span></p>
+      <p class="receipt-total"><span>THE STUDIO GOT</span><span id="score-studio">…</span></p>
+      <p class="receipt-total" id="score-grey-row"><span>THE GREY MARKET GOT</span><span id="score-grey">…</span></p>
+      <p class="receipt-total usd"><span>ENDING</span><span id="receipt-ending">…</span></p>
     </div>
   </div>
 </section>
 
-<div id="after-reveal" hidden>
+<section class="screen" data-station="bill" id="ending-screen" data-toc="Your ending">
+  <div class="text">
+    <div class="ending" id="ending">
+      <p class="ending-label" id="ending-label"></p>
+      <p class="ending-title" id="ending-title"></p>
+      <p id="ending-text"></p>
+      <p class="ending-real" id="ending-real"></p>
+    </div>
+    <p class="found" id="ending-found"></p>
+    <p class="actions"><button class="btn" id="replay">[ PLAY AGAIN FROM CHAPTER 2 ]</button></p>
+  </div>
+</section>
 
 <section class="screen" data-station="bill" data-toc="What it's worth">
   <div class="text">
     <p class="display line-big" id="worth-head">About one dollar.</p>
-    <p>At the Bond's rate, $9.99 buys about 9.6 million gold, so a million gold is worth roughly a bottle of water. Yours is worth <span id="worth-again">≈ $1</span> after everything on the receipt.</p>
-    <p class="muted">(A simple model: more gold makes each coin buy less, and fewer players means fewer people who want it.)</p>
+    <p id="worth-text">At the Bond's rate, $9.99 buys about 9.6 million gold, so a million gold is worth roughly a bottle of water.</p>
     <div class="stats compare">
-      <div class="stat"><span class="k">YOUR POUCH</span><span class="v" id="pouch-worth">≈ $1</span><span class="d">at the Bond's rate</span></div>
+      <div class="stat"><span class="k">YOUR POUCH</span><span class="v" id="pouch-worth">≈ $1</span><span class="d" id="pouch-worth-d">at the Bond's rate</span></div>
       <div class="stat"><span class="k">A FARMER'S DAY, VENEZUELA 2017</span><span class="v">≈ $2–3</span><span class="d">$15–20 a week</span></div>
     </div>
-    <p class="turn">To you, maybe nothing. To a gold farmer in Venezuela in 2017, it was <span id="worth-work">about 5 hours of work</span>.</p>
+    <p class="turn" id="worth-turn">To you, maybe nothing. To a gold farmer in Venezuela in 2017, it was about 5 hours of work.</p>
     <aside class="source">
       <span class="name">Source · OSRS Wiki; Kotaku 2017</span>
       <a href="https://oldschool.runescape.wiki/w/Old_school_bond" target="_blank" rel="noopener">“Old school bond”</a>;
@@ -854,7 +802,7 @@
 
 <section class="screen" data-station="bill" data-toc="Who prints your gold?">
   <div class="text">
-    <p>Look at that number again, and at who moved it: the studio <span id="count-studio">5 times</span>, the players <span id="count-players">once</span>. The only times you moved it yourself, you were sitting in the studio's chair. No government had a say.</p>
+    <p id="count-line">Look at your receipt again. The studio moved first every time. You only ever got to answer.</p>
     <p>It was set through a counter run by the same company that prints the gold, makes the rules, and decides who gets banned.</p>
     <p class="display line-big">So, who prints your gold?</p>
     <p>A studio. One that is also</p>
@@ -928,16 +876,8 @@
   <div class="text">
     <p>That's my answer. But the grey market only survives because it has customers, and its customers are players. In 2013, more than four in ten of <i>RuneScape</i>'s active players had bought from it.</p>
     <p class="display line-big">Would you buy gold from the grey market?</p>
-    <div class="choices one" id="your-turn">
-      <button class="btn" data-turn="never">Never. It's cheating, and it hurts the game.</button>
-      <button class="btn" data-turn="maybe">Only if the official price were too high.</button>
-      <button class="btn" data-turn="yes">Yes. My time is worth more than that.</button>
-    </div>
-    <div class="turn-cost" aria-live="polite">
-      <p data-cost="never" hidden><i>Never:</i> Then you pay in hours, or in Bonds, and the farmer sells to someone else.</p>
-      <p data-cost="maybe" hidden><i>If the price is too high:</i> Then the official price is what keeps the grey market small, and the studio is the one who sets it.</p>
-      <p data-cost="yes" hidden><i>Yes:</i> Then your money pays for the bots and the cheats, in the game you came to enjoy.</p>
-    </div>
+    <p class="turn" id="turn-you">You were offered it three times in this story.</p>
+    <p class="turn-cost" id="turn-cost"></p>
   </div>
 </section>
 
@@ -971,7 +911,7 @@
       <li>Madden (2006) <a href="https://minneapolisfed.org/article/2006/synthetic-worlds-the-business-and-culture-of-online-games" target="_blank" rel="noopener">review of Castronova, <i>Synthetic Worlds</i> (2005)</a>. Federal Reserve Bank of Minneapolis.</li>
       <li>r/2007scape (around 2022) <a href="https://www.reddit.com/r/2007scape/s/wzKE4EXrCC" target="_blank" rel="noopener">“Jagex 2019/2020 Financial Report Analysis”</a>.</li>
       <li>Wikipedia, <a href="https://en.wikipedia.org/wiki/Final_Fantasy_XIV_(2010_video_game)" target="_blank" rel="noopener">“Final Fantasy XIV (2010 video game)”</a>.</li>
-      <li><i>Emberfall</i>, the studio story, is fictional.</li>
+      <li>The studio meetings, the Ember Sword and the numbers in the player's story are made up and simplified. The studio's moves in chapters 3 and 4 are real.</li>
     </ul>
 
     <h3>The Tug of War</h3>
@@ -1016,23 +956,14 @@
   </div>
 </section>
 
-</div><!-- /after-reveal -->
-
-
-</div><!-- /after-usd -->
-
-</div><!-- /after-vote -->
-</div><!-- /after-send -->
-</div><!-- /after-crisis -->
-
-</div><!-- /after-story -->
-</div><!-- /after-dailies -->
-</div><!-- /after-sim -->
+</div><!-- /after-d3 -->
+</div><!-- /after-d2 -->
+</div><!-- /after-d1 -->
 </div><!-- /after-collect -->
 </main>
 
 <div class="fade-cover" id="fade-cover" aria-hidden="true"></div>
 
-<script src="js/main.js?v=3"></script>
+<script src="js/main.js?v=4"></script>
 </body>
 </html>

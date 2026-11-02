@@ -231,8 +231,15 @@ blockquote.quote cite { display: block; font-style: normal; font-size: .85rem; c
 .pouch .log.show { animation: pouch-log 4.5s ease forwards; }
 @keyframes pouch-log { 0% { opacity: 0; max-height: 0; } 8%, 80% { opacity: 1; max-height: 4rem; margin-top: .3rem; } 100% { opacity: 0; max-height: 0; } }
 .who-tag { font-weight: 600; letter-spacing: .06em; color: var(--alert); }
-.who-tag.director { color: var(--chat-name); }
-.who-tag.players { color: var(--accent); }
+.who-tag.you { color: var(--chat-name); }
+.who-tag.players, .who-tag.grey { color: var(--accent); }
+.who-tag.grey { color: var(--muted); }
+/* The other side's score: what the studio (and the grey market) got from you. */
+.pouch .take { display: block; font-family: var(--font-mono); font-size: .62rem; letter-spacing: .04em; color: var(--alert); border-top: 1px dashed var(--edge-light); margin-top: .3rem; padding-top: .25rem; }
+.pouch .take.grey { color: var(--muted); border-top: 0; margin-top: 0; padding-top: 0; }
+.pouch .take[hidden] { display: none; }
+.pouch.banned { border-color: var(--alert); }
+.pouch.banned .amount { color: var(--alert); text-decoration: line-through; }
 .pouch.locked { border-color: var(--alert); }
 .pouch.locked .amount::before { content: "\1F512  "; font-size: .9rem; }
 body[data-phase="paper"] .pouch { border: 1px solid var(--edge-light); outline: 1px dashed var(--edge-light); outline-offset: -5px; }
@@ -255,6 +262,8 @@ body[data-phase="receipt"] .pouch { border: 1px solid #111; font-family: var(--f
   }
   .pouch .label { display: none; }
   .pouch .log { position: absolute; left: 0; right: 0; bottom: 100%; max-width: none; padding: 0 1rem; background: var(--panel); }
+  .pouch { flex-wrap: wrap; row-gap: 0; }
+  .pouch .take { border-top: 0; margin-top: 0; padding-top: 0; }
   @keyframes pouch-log { 0% { opacity: 0; max-height: 0; } 8%, 80% { opacity: 1; max-height: 4rem; padding-top: .4rem; padding-bottom: .4rem; } 100% { opacity: 0; max-height: 0; } }
   body { padding-bottom: 4rem; }
 }
