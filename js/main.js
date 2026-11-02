@@ -77,8 +77,7 @@
       this.el.classList.toggle("banned", banned);
       if (!this.counting) this.setGold(sum("gold", list));
       this.sub.textContent = banned ? "banned · account closed"
-        : locked ? "locked · can't trade"
-        : `buys ${fmt(Math.floor(worthOf(list) / SWORD_START_PRICE))} swords`;
+        : `${locked ? "trade-limited · " : ""}buys ${fmt(Math.floor((sum("gold", list) * valueOf(list)) / SWORD_START_PRICE))} swords`;
       const line = $("pouch-usd");
       line.hidden = !state.priced;
       line.textContent = `≈ ${usd(usdOf(list))}`;
@@ -454,7 +453,7 @@
       ? "And the 4,000,000 gold you bought for $2? It came from a bot farm, and the studio followed it to you. Your account is banned. Your pouch is empty."
       : pick === "leave"
         ? `You weren't even playing. Your ${fmt(sum("gold"))} gold is locked anyway.`
-        : `Your ${fmt(sum("gold"))} gold can't move. You can't give it, lend it, or sell it fairly.`;
+        : `Your ${fmt(sum("gold"))} gold is stuck with you. You can't give it away, lend it, or pay anyone back.`;
     if (pick === "grey") benchAt("d-bank", "b-bank");
     setTimeout(() => openGate("after-d1"), pause(700));
   });
@@ -466,7 +465,7 @@
     if (state.path.leash === "grey") {
       record("lock", { who: "studio", k: "Trade blocked", banned: true, gold: -sum("gold"), text: "trade limits, and your bot gold traced: banned" }, "bot gold traced · account banned");
     } else {
-      record("lock", { who: "studio", k: "Trade blocked", locked: true, text: "trades over 3,000 gold blocked, for everyone" }, "trading locked");
+      record("lock", { who: "studio", k: "Trade blocked", locked: true, text: "unbalanced trades blocked: nobody can buy your gold for cash" }, "trading limited");
     }
     pouch.hint();
   }
@@ -475,11 +474,11 @@
     voice: { gold: 300000, hours: 15, text: "signed the petition, kept playing", note: "+300,000 gold · 15 h to the studio",
       result: "Your name goes on the list with thousands of others. For a long time, nothing happens." },
     quiet: { gold: 1000000, hours: 40, text: "kept your head down and kept grinding", note: "+1,000,000 gold · 40 h to the studio",
-      result: "You grind on. The gold piles up in a pouch you can't trade from. The studio's dashboard has no idea you're angry." },
+      result: "You grind on. The gold piles up in a pouch you can't give from. The studio's dashboard has no idea you're angry." },
     grey: { banned: true, grey: 3, text: "paid a seller $3 to dodge the limit: banned", note: "account banned · $3 to a gold seller",
       result: "The seller moves your gold through a chain of bot accounts. Two weeks later the studio bans the whole chain, yours included." },
     leave: { text: "left the game", note: "+0 · the studio lost a player",
-      result: "You quit. Your gold stays behind, locked, in a game you no longer play." },
+      result: "You quit. Your gold stays behind, stuck, in a game you no longer play." },
   };
 
   decide("d-bank", (pick) => {
@@ -505,9 +504,9 @@
     const p = state.path;
     const banned = bannedIn();
     $("vote-you").textContent = banned ? "Your pouch stays empty. Banned accounts don't get a vote."
-      : p.bank === "voice" ? "One of those votes was yours. Your pouch is unlocked."
-      : p.bank === "leave" ? "You'd already left. Your pouch is unlocked, in a game you don't play."
-      : "You didn't vote. Other players did it for you. Your pouch is unlocked.";
+      : p.bank === "voice" ? "One of those votes was yours. Your pouch is free again."
+      : p.bank === "leave" ? "You'd already left. Your pouch is free again, in a game you don't play."
+      : "You didn't vote. Other players did it for you. Your pouch is free again.";
     $("keep-label").textContent = p.bank === "leave" ? "Neither. Stay away." : "Neither. Keep playing for free.";
     if (banned) benchAt("d-exchange", "b-exchange");
     setTimeout(() => openGate("after-d2"), pause(700));
@@ -620,7 +619,7 @@
     good: {
       tone: "good", label: "GOOD ENDING", title: "Worth staying for",
       text: "You played the game, not the shop, and when the studio locked you in, you answered with your name on a petition. Players like you won the vote. Your gold isn't worth much in dollars. It was never meant to be.",
-      real: "This one really happened: in 2013, a petition and a vote brought back Old School RuneScape.",
+      real: "Close to what really happened: players voted free trade back in 2011, and in 2013 a petition and a vote brought back Old School RuneScape.",
     },
     favourite: {
       tone: "mixed", label: "MIXED ENDING", title: "The studio's favourite",
@@ -640,7 +639,7 @@
     banned: {
       tone: "bad", label: "BAD ENDING", title: "Banned",
       text: "",
-      real: "In 2013 alone, Jagex banned 1.1 million gold-farming accounts.",
+      real: "In the first nine months of 2013, Jagex issued 1.1 million bans against gold-farming accounts.",
     },
   };
 
@@ -684,10 +683,12 @@
   // ---------- the last chapter, filled in from the ledger ----------
 
   function fillHour() {
-    const h = sum("hours");
-    const v = usdOf();
+    // Only gold earned by playing: refills and Bonds bought theirs, so they're left out.
+    const played = entries().filter((e) => e.who === "you" && e.hours && !e.paid);
+    const h = sum("hours", played);
+    const v = bannedIn() ? 0 : toUsd(sum("gold", played) * valueOf());
     $("hour-you").hidden = !(h > 0 && v > 0);
-    $("hour-you").textContent = `In this story you put in ${h} hours and ended up with ${usd(v)}: about ${((v / h) * 100).toFixed(1)}¢ an hour.`;
+    $("hour-you").textContent = `In this story, your ${h} hours of play earned about ${usd(v)}: roughly ${((v / h) * 100).toFixed(1)}¢ an hour.`;
   }
 
   // A Venezuelan farmer's day in 2017: about $2.50 for 12 hours or more.
