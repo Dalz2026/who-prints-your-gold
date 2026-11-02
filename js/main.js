@@ -20,8 +20,10 @@
     crisisChoice: null,
     tradeLocked: false,
     vote: null,
+    dailies: null,
+    dailiesGold: 0,
+    ending: null,
     pricesInUsd: false,
-    shiftGold: null,
     revealed: false,
     yourTurn: null,
     phase: "game",
@@ -81,8 +83,6 @@
     pouch: () => pouch.hint(),
     rate: () => runRate(),
     usd: () => showUsd(),
-    comments: () => playThread(),
-    slp: () => pouch.hint(),
     receipt: () => setPhase("receipt"),
     print: () => printReceipt(),
   };
@@ -544,7 +544,299 @@
 
   const pause = (ms) => (reducedMotion ? 0 : ms);
 
-  // ---------- chapter 2: the crisis room ----------
+  // ---------- chapter 2: the dailies ----------
+  // Sixteen clicks of work and twelve of energy: the list can't be finished today without the refill.
+  // The refill is pretend; the note after it says so.
+
+  const ENERGY = 12;
+  const DAILY_GOLD = 600;
+  const daily = { energy: ENERGY, running: false, refilled: false, done: false };
+  const taskEls = [...document.querySelectorAll("#dailies .task[data-task]")];
+  const progress = Object.fromEntries(taskEls.map((li) => [li.dataset.task, 0]));
+  const taskButton = (li) => li.querySelector("button");
+  const taskDone = (li) => progress[li.dataset.task] >= Number(li.dataset.need);
+
+  function drawEnergy() {
+    $("energy-fill").style.width = `${(daily.energy / ENERGY) * 100}%`;
+    $("energy-num").textContent = `${daily.energy} / ${ENERGY}`;
+  }
+
+  // The reset clock counts down to the reader's own midnight.
+  function tickReset() {
+    const now = new Date();
+    const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const left = Math.floor((midnight - now) / 1000);
+    const two = (n) => String(n).padStart(2, "0");
+    $("dailies-reset").textContent = `resets in ${two(Math.floor(left / 3600))}:${two(Math.floor(left / 60) % 60)}:${two(left % 60)}`;
+  }
+  tickReset();
+  setInterval(tickReset, 1000);
+
+  function setTaskButtons(on) {
+    taskEls.forEach((li) => { taskButton(li).disabled = !on || taskDone(li); });
+  }
+
+  const dailiesNotes = {
+    paid: "Nothing was charged: this is a page about games. In a real one, that button is what the whole list was built for.",
+    waited: "Tomorrow the list resets, and so does your energy. See you then. And the day after.",
+  };
+
+  function dailiesEnd(how) {
+    if (daily.done) return;
+    daily.done = true;
+    daily.running = false;
+    state.dailies = how;
+    setTaskButtons(false);
+    $("dailies-out").hidden = true;
+    $("dailies-actions").hidden = true;
+    $("dailies-note").textContent = dailiesNotes[how];
+    $("dailies-after").hidden = false;
+    openGate("after-dailies");
+  }
+
+  taskEls.forEach((li) => taskButton(li).addEventListener("click", () => {
+    if (!daily.running || daily.energy <= 0 || taskDone(li)) return;
+    daily.energy -= 1;
+    progress[li.dataset.task] += 1;
+    li.querySelector(".p").textContent = `${progress[li.dataset.task]} / ${li.dataset.need}`;
+    if (taskDone(li)) { li.classList.add("done"); taskButton(li).disabled = true; }
+    drawEnergy();
+    if (taskEls.every(taskDone)) {
+      state.dailiesGold = DAILY_GOLD;
+      pouch.setGold(state.gold + DAILY_GOLD);
+      flyCoins($("dailies"), pouch.el, 6);
+      pouch.bump();
+      $("dailies-reward").textContent = `All done: +${DAILY_GOLD} gold`;
+      dailiesEnd("paid");
+    } else if (daily.energy <= 0) {
+      setTaskButtons(false);
+      $("dailies-out").hidden = false;
+      updatePager();
+    }
+  }));
+
+  $("dailies-start").addEventListener("click", () => {
+    if (daily.running || daily.done) return;
+    daily.running = true;
+    $("dailies-start").disabled = true;
+    setTaskButtons(true);
+    taskButton(taskEls[0]).focus();
+  });
+
+  $("refill").addEventListener("click", () => {
+    if (daily.refilled || daily.done) return;
+    daily.refilled = true;
+    daily.energy = ENERGY;
+    drawEnergy();
+    $("dailies-out").hidden = true;
+    setTaskButtons(true);
+  });
+
+  $("wait").addEventListener("click", () => dailiesEnd("waited"));
+  $("dailies-skip").addEventListener("click", () => dailiesEnd("waited"));
+  drawEnergy();
+
+  // ---------- chapter 2: the studio story ----------
+  // A short branching story from the director's chair. A choice nudges the meters and names the next scene.
+  // Endings are fixed by the path, not by the meters, so each one can say plainly why it happened.
+
+  const STORY = {
+    start: {
+      lines: [
+        ["VERA · FINANCE", "Daily players are down 20% this year. The board wants them back up by next quarter."],
+        ["SAM · COMMUNITY", "Players say there's nothing new to do. They've seen it all."],
+      ],
+      choices: [
+        { label: "Add daily tasks and a login streak.", next: "chores", d: { players: 10, trust: -10, cash: 5 } },
+        { label: "Make the best gear drop less often.", next: "drops", d: { players: 5, trust: -15, cash: 5 } },
+        { label: "Start building a big new expansion.", next: "build", d: { trust: 5, cash: -15 } },
+      ],
+    },
+    chores: {
+      lines: [
+        ["mira_k", "another daily list? cool. love my second job", "player"],
+        ["VERA · FINANCE", "Hours played are up 30%. Whatever you did, keep doing it."],
+        ["SAM · COMMUNITY", "They're logging in. They're just not enjoying it."],
+      ],
+      choices: [
+        { label: "Keep it, and add a paid battle pass.", end: "treadmill", d: { trust: -15, cash: 20 } },
+        { label: "Roll it back and start the expansion.", next: "build", late: true, d: { players: -5, trust: 10, cash: -15 } },
+      ],
+    },
+    drops: {
+      lines: [
+        ["dax_99", "3 weeks for one drop?? gold sellers have it for $5", "player"],
+        ["SAM · COMMUNITY", "The rare gear is already for sale on outside websites. Bots farm it day and night."],
+        ["VERA · FINANCE", "Time played is up, though. Can't we just ban the bots?"],
+      ],
+      choices: [
+        { label: "Keep the drop rate. Ban the bots.", end: "lights", d: { players: -15, trust: -15 } },
+        { label: "Put the drop rate back and start the expansion.", next: "build", late: true, d: { trust: 5, cash: -15 } },
+      ],
+    },
+    build: {
+      lines: [
+        ["VERA · FINANCE", "An expansion takes at least a year. Who's building it?"],
+        ["SAM · COMMUNITY", "Our team has kept the game running for years. They've never made anything this big."],
+      ],
+      choices: [
+        { label: "Our own team. Keep costs down.", end: "empty", d: { cash: -5 } },
+        { label: "Hire experienced designers, whatever it costs.", next: "wait", d: { cash: -20 } },
+      ],
+    },
+    wait: {
+      lines: [
+        ["VERA · FINANCE", "Cash is running low, and players are drifting while we build. Give them something to grind until launch?"],
+        ["mira_k", "is this game even getting updates anymore", "player"],
+      ],
+      choices: [
+        { label: "Add a grind event to hold them.", end: "scars", d: { players: 5, trust: -10 } },
+        { label: "Tell players the plan, and let them vote on it.", end: "good", d: { trust: 20 } },
+      ],
+    },
+  };
+
+  const ENDINGS = {
+    good: {
+      tone: "good", label: "GOOD ENDING", title: "Worth staying for",
+      text: "The expansion launches late and over budget, but it's good, and players voted for it, so it feels like theirs. Old players come back and new ones arrive. The board gets its numbers, and nobody had to be chained to a chore list.",
+      real: "Real studios have pulled this off. Read on.",
+      meters: { players: 85, trust: 90, cash: 60 },
+    },
+    scars: {
+      tone: "mixed", label: "MIXED ENDING", title: "Good game, sore players",
+      text: "The expansion is great. But the grind event made players wonder whether the chores were coming back. They return carefully, with one eye on the exit.",
+      real: "Trust is slow to build and quick to spend.",
+      meters: { players: 70, trust: 50, cash: 55 },
+    },
+    treadmill: {
+      tone: "mixed", label: "MIXED ENDING", title: "The treadmill",
+      text: "The numbers look great. Players log in every day, clear their lists, buy the pass and complain. Few of them are having fun, but few leave, yet. Emberfall keeps running as a chore machine.",
+      real: "Remember that comment: “they know we won't stop playing.”",
+      meters: { players: 70, trust: 20, cash: 90 },
+    },
+    lights: {
+      tone: "bad", label: "BAD ENDING", title: "Lights out",
+      text: "The bots come back on new accounts every day. Honest players give up on the drop: some buy it from gold sellers, most just quit. Two years later, Emberfall's servers go dark.",
+      real: "In chapter 3, RuneScape tries banning bots too.",
+      meters: { players: 10, trust: 10, cash: 15 },
+    },
+    empty: {
+      tone: "bad", label: "BAD ENDING", title: "Big promise, empty launch",
+      text: "The expansion ships late, buggy and thin. Players who waited a year feel cheated, and the money is gone. Good content needs people who know how to make it, and Emberfall didn't have them.",
+      real: "That's the risk most studios won't take. Read on.",
+      meters: { players: 20, trust: 15, cash: 5 },
+    },
+  };
+
+  const METERS_START = { players: 55, trust: 60, cash: 60 };
+  const story = { meters: { ...METERS_START }, quarter: 0, late: false, busy: false };
+  const storyLines = $("story-lines");
+  const storyChoices = $("story-choices");
+  state.endingsFound = new Set();
+
+  function drawMeters() {
+    document.querySelectorAll("#story .meter").forEach((m) => {
+      const v = story.meters[m.dataset.m];
+      m.querySelector(".fill").style.width = `${v}%`;
+      m.classList.toggle("low", v < 30);
+    });
+  }
+
+  function nudge(d = {}) {
+    Object.entries(d).forEach(([k, v]) => { story.meters[k] = Math.min(100, Math.max(5, story.meters[k] + v)); });
+    drawMeters();
+  }
+
+  function storyLine([who, text, kind]) {
+    const line = document.createElement("p");
+    line.className = kind === "player" ? "line player" : "line";
+    const name = document.createElement("span");
+    name.className = "who";
+    name.textContent = who;
+    line.append(name, text);
+    storyLines.appendChild(line);
+  }
+
+  function choiceButton(label, onPick) {
+    const btn = document.createElement("button");
+    btn.className = "btn";
+    btn.textContent = label;
+    btn.addEventListener("click", onPick);
+    storyChoices.appendChild(btn);
+    return btn;
+  }
+
+  function playScene(id) {
+    const scene = STORY[id];
+    story.quarter += 1;
+    story.busy = true;
+    $("story-scene").textContent = `QUARTER ${story.quarter}`;
+    storyLines.replaceChildren();
+    storyChoices.replaceChildren();
+    scene.lines.forEach((line, i) => setTimeout(() => storyLine(line), pause(700 * i)));
+    setTimeout(() => {
+      story.busy = false;
+      scene.choices.forEach((c) => choiceButton(c.label, () => {
+        if (story.busy) return;
+        nudge(c.d);
+        if (c.late) story.late = true;
+        if (c.end) endStory(c.end); else playScene(c.next);
+      }));
+      updatePager();
+    }, pause(700 * scene.lines.length));
+  }
+
+  function endStory(id) {
+    const e = ENDINGS[id];
+    state.ending = id;
+    state.endingsFound.add(id);
+    story.meters = { ...e.meters };
+    drawMeters();
+    $("story-scene").textContent = "TWO YEARS LATER";
+    storyLines.replaceChildren();
+    storyChoices.replaceChildren();
+    const box = document.createElement("div");
+    box.className = `ending ${e.tone}`;
+    const label = document.createElement("p");
+    label.className = "ending-label";
+    label.textContent = e.label;
+    const title = document.createElement("p");
+    title.className = "ending-title";
+    title.textContent = e.title;
+    const text = document.createElement("p");
+    text.textContent = id === "good" && story.late ? `It cost you a U-turn and a lost quarter. ${e.text}` : e.text;
+    const real = document.createElement("p");
+    real.className = "ending-real";
+    real.textContent = e.real;
+    box.append(label, title, text, real);
+    storyLines.appendChild(box);
+    const found = document.createElement("p");
+    found.className = "found";
+    found.textContent = `Endings found: ${state.endingsFound.size} of ${Object.keys(ENDINGS).length}`;
+    choiceButton("[ TRY AGAIN ]", startStory);
+    storyChoices.appendChild(found);
+    $("story-skip").hidden = true;
+    openGate("after-story");
+  }
+
+  function startStory() {
+    story.meters = { ...METERS_START };
+    story.quarter = 0;
+    story.late = false;
+    drawMeters();
+    $("story-actions").hidden = true;
+    playScene("start");
+  }
+
+  $("story-start").addEventListener("click", startStory);
+  $("story-skip").addEventListener("click", () => {
+    $("story-skip").hidden = true;
+    openGate("after-story");
+  });
+  drawMeters();
+
+  // ---------- chapter 3: the crisis room ----------
   // Each choice gets its own chat reaction, then every choice lands on the same screen.
 
   const crisisLines = {
@@ -569,7 +861,7 @@
     }, pause(700 * lines.length + 1600));
   }));
 
-  // ---------- chapter 2: trade blocked ----------
+  // ---------- chapter 3: trade blocked ----------
 
   $("trade-send").addEventListener("click", () => {
     if (state.tradeLocked) return;
@@ -590,7 +882,7 @@
     }, pause(900));
   });
 
-  // ---------- chapter 2: the vote ----------
+  // ---------- chapter 3: the vote ----------
   // The one choice in the piece that counts: the reader's vote joins the real result.
 
   const VOTE_TOTAL = 1234658;
@@ -611,7 +903,7 @@
     }, pause(2000));
   }));
 
-  // ---------- chapter 3: the Bond ----------
+  // ---------- chapter 4: the Bond ----------
   // The pouch gets a grey "$ ???" line. It isn't explained; the finale fills it in.
 
   function showUsd() {
@@ -621,7 +913,7 @@
     pouch.hint();
   }
 
-  // ---------- chapter 3: the price tag ----------
+  // ---------- chapter 4: the price tag ----------
   // One click turns every price into dollars at the Bond's rate and moves the page into the paper phase.
   // The button stays, greyed out: clicking it again only says you can't go back.
 
@@ -673,141 +965,19 @@
     }, pause(1400));
   });
 
-  // ---------- chapter 4: four cards ----------
-  // Work and Bet are this chapter. Property and Gambling open their notes in the drawer below.
-
-  const cardButtons = document.querySelectorAll(".card-btn");
-  cardButtons.forEach((btn) => btn.addEventListener("click", () => {
-    const open = btn.getAttribute("aria-expanded") !== "true";
-    cardButtons.forEach((b) => b.setAttribute("aria-expanded", String(b === btn && open)));
-    document.querySelectorAll("#card-detail [data-detail]").forEach((d) => {
-      d.hidden = !(open && d.dataset.detail === btn.dataset.card);
-    });
-  }));
-
-  // ---------- chapter 4: work a shift ----------
-  // A cow takes four hits, drops a cowhide worth 150 gold and comes back 1.5 seconds later.
-  // Clicking flat out gets about eight cows in 20 seconds: roughly $20 a week at 12 hours a day,
-  // the same range Kotaku reported for Venezuelan farmers. Deliberately dull: no combos, no upgrades.
-
-  const SHIFT_SECONDS = 20;
-  const COW_HP = 4;
-  const COW_GOLD = 150;
-  const COW_RESPAWN_MS = 1500;
-  const SHIFTS_PER_DAY = (12 * 3600) / SHIFT_SECONDS;
-
-  const shift = { hp: COW_HP, gold: 0, timer: null, running: false };
-  const cow = $("cow");
-  const hpPips = [...document.querySelectorAll("#cow-hp i")];
-
-  function drawHp() {
-    hpPips.forEach((pip, i) => pip.classList.toggle("gone", i >= shift.hp));
-  }
-
-  function dropPop(text) {
-    const pop = $("drop-pop");
-    pop.textContent = text;
-    if (reducedMotion) return;
-    pop.animate([
-      { opacity: 0, transform: "translate(-50%, 0)" },
-      { opacity: 1, transform: "translate(-50%, -14px)", offset: 0.2 },
-      { opacity: 0, transform: "translate(-50%, -40px)" },
-    ], { duration: 1300, easing: "ease-out", fill: "forwards" });
-  }
-
-  cow.addEventListener("click", () => {
-    if (!shift.running || shift.hp <= 0) return;
-    shift.hp -= 1;
-    drawHp();
-    if (!reducedMotion) cow.animate([{ transform: "translateX(-4px)" }, { transform: "translateX(4px)" }, { transform: "none" }], { duration: 120 });
-    if (shift.hp > 0) return;
-    shift.gold += COW_GOLD;
-    $("shift-tally").textContent = `${fmt(shift.gold)} gold`;
-    pouch.setGold(state.gold + COW_GOLD);
-    flyCoins(cow, pouch.el, 1);
-    dropPop(`+${COW_GOLD} gold (${usd(COW_GOLD)})`);
-    cow.classList.add("down");
-    setTimeout(() => {
-      shift.hp = COW_HP;
-      drawHp();
-      cow.classList.remove("down");
-    }, COW_RESPAWN_MS);
-  });
-
-  function shiftEnd(gold) {
-    clearInterval(shift.timer);
-    shift.running = false;
-    state.shiftGold = gold;
-    cow.disabled = true;
-    $("shift-skip").hidden = true;
-    $("shift-start").textContent = "[ SHIFT OVER ]";
-    $("shift-gold").textContent = fmt(gold);
-    $("shift-usd").textContent = usd(gold);
-    $("shift-day").textContent = usd(gold * SHIFTS_PER_DAY);
-    $("your-week").textContent = usd(gold * SHIFTS_PER_DAY * 7);
-    $("shift-end").hidden = false;
-    pouch.bump();
-    updatePager();
-  }
-
-  $("shift-start").addEventListener("click", () => {
-    if (shift.running || state.shiftGold !== null) return;
-    shift.running = true;
-    $("shift-start").disabled = true;
-    cow.disabled = false;
-    cow.focus();
-    const t0 = performance.now();
-    shift.timer = setInterval(() => {
-      const left = Math.max(0, SHIFT_SECONDS - (performance.now() - t0) / 1000);
-      $("shift-clock").textContent = `00:${String(Math.ceil(left)).padStart(2, "0")}`;
-      $("shift-bar").style.width = `${(left / SHIFT_SECONDS) * 100}%`;
-      if (left <= 0) shiftEnd(shift.gold);
-    }, 100);
-  });
-
-  // Skipping counts as an average shift: six cows.
-  $("shift-skip").addEventListener("click", () => {
-    if (shift.running || state.shiftGold !== null) return;
-    $("shift-start").disabled = true;
-    $("shift-clock").textContent = "00:00";
-    $("shift-bar").style.width = "0";
-    const gold = 6 * COW_GOLD;
-    $("shift-tally").textContent = `${fmt(gold)} gold`;
-    pouch.setGold(state.gold + gold);
-    shiftEnd(gold);
-  });
-
-  $("clock-off").addEventListener("click", () => {
-    $("clock-off").disabled = true;
-    openGate("after-shift");
-    go(1);
-  });
-
-  // ---------- chapter 4: the thread ----------
-  // Three comments, one at a time, with no commentary.
-
-  const threadLines = [
-    ["▲ 202", "It would be wild to experience seeing Venezuela's economy fixed…"],
-    ["▲ 115", "…ruining my 20 yr old video game"],
-    ["▲ 56", "Venezuelans don't bot though… play legit 12+ hours a day"],
-  ];
-
-  function playThread() {
-    threadLines.forEach((line, i) => setTimeout(() => say(line, $("thread"), 4), pause(900 + 1400 * i)));
-  }
-
   // ---------- finale: the receipt ----------
   // Printed line by line from `state`, so every reader's receipt is a little different.
 
-  const pouchTotal = () => START_GOLD + (state.shiftGold || 0);
+  const pouchTotal = () => START_GOLD + state.dailiesGold;
 
   function receiptLines() {
     return [
       ["Collected on login", `${fmt(START_GOLD)} gold`],
       ["The Mint", `still ${fmt(START_GOLD)} gold, but it buys ${fmt(swordsFor(state.swordPrice))} swords, not ${fmt(swordsFor(SWORD_START_PRICE))}`],
-      ["The Central Bank", `trading locked once, unlocked by ${fmt(VOTE_TOTAL)} votes. You voted: ${state.vote ?? "–"}`],
+      ["The Leash", state.dailies === "paid" ? `daily tasks finished after a refill, + ${fmt(DAILY_GOLD)} gold` : "out of energy, back tomorrow, + 0 gold"],
+      ["Your studio", state.ending ? `${ENDINGS[state.ending].title}, ${state.endingsFound.size} of ${Object.keys(ENDINGS).length} endings found` : "story skipped"],
+      ["The Tug of War", `trading locked once, unlocked by ${fmt(VOTE_TOTAL)} votes. You voted: ${state.vote ?? "–"}`],
       ["The Exchange", "prices shown in $, can't be undone"],
-      ["The Fallout", `one 20-second shift, + ${fmt(state.shiftGold || 0)} gold`],
     ];
   }
 
