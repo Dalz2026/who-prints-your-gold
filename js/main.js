@@ -30,7 +30,8 @@
   // ---------- the ledger ----------
   // One entry per move. gold: change in the pouch; value: what each coin buys (×); hours and paid: what
   // the studio got from you; grey: dollars that went to the grey market; cash: dollars you took home.
-  // locked freezes the pouch until a later entry unlocks it; banned empties it for good.
+  // locked freezes the pouch until a later entry unlocks it; warned puts a strike on the account;
+  // banned empties it for good.
 
   const WHO = { studio: "STUDIO", you: "YOU", players: "PLAYERS" };
   const ledger = new Map();
@@ -38,6 +39,7 @@
   const sum = (key, list = entries()) => list.reduce((n, e) => n + (e[key] || 0), 0);
   const valueOf = (list = entries()) => list.reduce((n, e) => n * (e.value ?? 1), 1);
   const bannedIn = (list = entries()) => list.some((e) => e.banned);
+  const warnedIn = (list = entries()) => list.some((e) => e.warned);
   const lockedIn = (list = entries()) => list.some((e) => e.locked) && !list.some((e) => e.unlocks);
   // Worth in day-0 gold (a sword at 100). Locked or banned gold is worth nothing to anyone.
   const worthOf = (list = entries()) => (bannedIn(list) || lockedIn(list) ? 0 : sum("gold", list) * valueOf(list));
@@ -77,7 +79,7 @@
       this.el.classList.toggle("banned", banned);
       if (!this.counting) this.setGold(sum("gold", list));
       this.sub.textContent = banned ? "banned · account closed"
-        : `${locked ? "trade-limited · " : ""}buys ${fmt(Math.floor((sum("gold", list) * valueOf(list)) / SWORD_START_PRICE))} swords`;
+        : `${warnedIn(list) ? "warned · " : ""}${locked ? "trade-limited · " : ""}buys ${fmt(Math.floor((sum("gold", list) * valueOf(list)) / SWORD_START_PRICE))} swords`;
       const line = $("pouch-usd");
       line.hidden = !state.priced;
       line.textContent = `≈ ${usd(usdOf(list))}`;
@@ -450,11 +452,10 @@
     if (a.gold) flyCoins($("d-leash"), pouch.el, 8);
     showResult("r-leash", a.result);
     $("lock-you").textContent = pick === "grey"
-      ? "And the 4,000,000 gold you bought for $2? It came from a bot farm, and the studio followed it to you. Your account is banned. Your pouch is empty."
+      ? "And the 4,000,000 gold you bought for $2? Bots farmed it. The studio banned the bots, followed the gold to you and took it back. The seller keeps your $2. You get a warning: next time, it's the account."
       : pick === "leave"
         ? `You weren't even playing. Your ${fmt(sum("gold"))} gold is locked anyway.`
         : `Your ${fmt(sum("gold"))} gold is stuck with you. You can't give it away, lend it, or pay anyone back.`;
-    if (pick === "grey") benchAt("d-bank", "b-bank");
     setTimeout(() => openGate("after-d1"), pause(700));
   });
 
@@ -463,7 +464,7 @@
   function lockMove() {
     if (ledger.has("lock")) return;
     if (state.path.leash === "grey") {
-      record("lock", { who: "studio", k: "Trade blocked", banned: true, gold: -sum("gold"), text: "trade limits, and your bot gold traced: banned" }, "bot gold traced · account banned");
+      record("lock", { who: "studio", k: "Trade blocked", locked: true, warned: true, gold: -SWORD_GOLD, text: "unbalanced trades blocked; your bought gold traced and taken back, with a warning" }, `−${fmt(SWORD_GOLD)} gold taken back · warning`);
     } else {
       record("lock", { who: "studio", k: "Trade blocked", locked: true, text: "unbalanced trades blocked: nobody can buy your gold for cash" }, "trading limited");
     }
@@ -475,8 +476,8 @@
       result: "Your name goes on the list with thousands of others. For a long time, nothing happens." },
     quiet: { gold: 1000000, hours: 40, text: "kept your head down and kept grinding", note: "+1,000,000 gold · 40 h to the studio",
       result: "You grind on. The gold piles up in a pouch you can't give from. The studio's dashboard has no idea you're angry." },
-    grey: { banned: true, grey: 3, text: "paid a seller $3 to dodge the limit: banned", note: "account banned · $3 to a gold seller",
-      result: "The seller moves your gold through a chain of bot accounts. Two weeks later the studio bans the whole chain, yours included." },
+    grey: { banned: true, grey: 3, text: "gave a seller your password to dodge the limit: banned", note: "account banned · $3 to a gold seller",
+      result: "The seller logs in as you and runs your gold through a chain of bot accounts. Two weeks later the studio bans the whole chain, yours included." },
     leave: { text: "left the game", note: "+0 · the studio lost a player",
       result: "You quit. Your gold stays behind, stuck, in a game you no longer play." },
   };
@@ -485,18 +486,13 @@
     lockMove();
     state.path.bank = pick;
     const a = { ...BANK[pick] };
-    if (pick === "grey") a.gold = -sum("gold");
+    if (pick === "grey") {
+      a.gold = -sum("gold");
+      if (warnedIn()) a.result += " You'd already had your warning. There isn't a second one.";
+    }
     const back = state.path.leash === "leave" && (pick === "voice" || pick === "quiet");
     record("bank", { who: "you", k: "The Tug of War", ...a, text: back ? `came back, ${a.text}` : a.text }, a.note);
     showResult("r-bank", back ? `You come back for this. ${a.result}` : a.result);
-    afterBank();
-  });
-
-  $("w-bank").addEventListener("click", () => {
-    if (state.path.bank) return;
-    lockMove();
-    state.path.bank = "banned";
-    $("w-bank").disabled = true;
     afterBank();
   });
 
@@ -587,7 +583,7 @@
       const cash = full * GREY_SHARE;
       return {
         gold: -gold, cash, grey: full - cash, banned: true, text: `sold ${fmt(gold)} gold to the grey market: banned`, note: `${dollars(cash)} cash · account banned`,
-        result: `The cash arrives. A week later, so does the ban: the buyer was a bot ring, and the studio followed the gold. The ring sells it on for ${dollars(full)}.`,
+        result: `The cash arrives. A week later, so does the ban: the buyer was a bot ring, and the studio followed the gold. Sellers don't get a warning. The ring sells it on for ${dollars(full)}.`,
       };
     },
     keep: () => (state.path.bank === "leave"
@@ -636,16 +632,24 @@
       text: "You cut the leash. The studio lost a player, and a player leaving is the one signal every studio reads. But your gold stayed behind, and the game went on without you.",
       real: "Leaving is the one vote the studio always counts.",
     },
+    caught: {
+      tone: "bad", label: "BAD ENDING", title: "Caught",
+      text: "You paid $2 for gold you no longer have. The studio took it back and put a warning on your account. The seller kept the $2 and found the next buyer. Only the grey market came out ahead.",
+      real: "Jagex's 2007 rule: “buying gold for real-world money = a permanent ban”. In practice, it later admitted, buyers got off more lightly than sellers.",
+    },
     banned: {
       tone: "bad", label: "BAD ENDING", title: "Banned",
       text: "",
-      real: "In the first nine months of 2013, Jagex issued 1.1 million bans against gold-farming accounts.",
+      real: () => (state.path.bank === "grey"
+        ? "After the 2007 limit, gold sellers really did start asking buyers for their password and bank PIN, and used their accounts to move gold."
+        : "Sellers were always hit hardest: in the first nine months of 2013, Jagex issued 1.1 million bans against gold-farming accounts."),
     },
   };
 
   function endingId() {
     const p = state.path;
     if (bannedIn()) return "banned";
+    if (warnedIn()) return "caught";
     if (p.bank === "leave" && p.exchange === "keep") return "away";
     if (p.leash === "pay" || p.exchange === "bond") return "favourite";
     if (p.bank === "voice") return "good";
@@ -654,11 +658,10 @@
 
   function bannedText() {
     const p = state.path;
-    const how = p.leash === "grey"
-      ? "The cheapest gold in the game came from bots, and the studio followed it to you. The seller kept your $2."
-      : p.bank === "grey"
-        ? "The seller dodged the trade limit with bot accounts, and when the studio banned them, it banned you too. The seller kept your $3."
-        : `You walked off with ${dollars(sum("cash"))} in cash. The bot ring that bought your gold sold it on at a profit.`;
+    const before = warnedIn() ? " You'd already had your warning." : "";
+    const how = p.bank === "grey"
+      ? `You handed a seller your password, and they ran your gold through bot accounts. When the studio banned the bots, it banned you too.${before} The grey market kept ${dollars(sum("grey"))}.`
+      : `You walked off with ${dollars(sum("cash"))} in cash.${before} The bot ring that bought your gold sold it on at a profit.`;
     return `${how} The studio lost a player, you lost the game, and the grey market got paid. That's why it's both sides' enemy.`;
   }
 
@@ -671,7 +674,7 @@
     $("ending-label").textContent = e.label;
     $("ending-title").textContent = e.title;
     $("ending-text").textContent = id === "banned" ? bannedText() : e.text;
-    $("ending-real").textContent = e.real;
+    $("ending-real").textContent = typeof e.real === "function" ? e.real() : e.real;
     $("ending-found").textContent = `Endings found: ${state.endingsFound.size} of ${Object.keys(ENDINGS).length}`;
     fillHour();
     fillWorth();
@@ -725,7 +728,8 @@
     const p = state.path;
     const took = [p.leash === "grey", p.bank === "grey", p.exchange === "sell"].some(Boolean);
     const offers = 1 + (p.bank !== "banned") + (p.exchange !== "banned");
-    $("turn-you").textContent = took ? "You already did, in this story. It cost you the account." : `In this story you were offered it ${times(offers)}, and said no every time.`;
+    const lost = bannedIn() ? "It cost you the account." : "The studio took the gold back, and the seller kept your money.";
+    $("turn-you").textContent = took ? `You already did, in this story. ${lost}` : `In this story you were offered it ${times(offers)}, and said no every time.`;
     $("turn-cost").textContent = took ? "And your money paid for the bots and the cheats, in the game you came to enjoy."
       : p.leash === "pay" || p.exchange === "bond" ? "So you paid the studio instead, and the farmers sold to someone else."
       : "So you paid in hours instead, and the farmers sold to someone else.";
@@ -781,8 +785,8 @@
     state.priced = false;
     state.ending = null;
     ["d-leash", "d-bank", "d-exchange"].forEach(resetDecision);
-    ["r-leash", "r-bank", "r-exchange", "b-bank", "b-exchange"].forEach((id) => { $(id).hidden = true; });
-    ["w-bank", "w-exchange"].forEach((id) => { $(id).disabled = false; });
+    ["r-leash", "r-bank", "r-exchange", "b-exchange"].forEach((id) => { $(id).hidden = true; });
+    $("w-exchange").disabled = false;
     $("vote-bars").classList.remove("grow");
     $("vote-count").textContent = "0";
     printed = false;
