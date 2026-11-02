@@ -12,8 +12,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700&family=IBM+Plex+Mono:wght@400;600&family=Silkscreen&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/theme.css?v=4">
-<link rel="stylesheet" href="css/page.css?v=4">
+<link rel="stylesheet" href="css/theme.css?v=5">
+<link rel="stylesheet" href="css/page.css?v=5">
 </head>
 <body data-phase="game">
 
@@ -816,58 +816,158 @@
   </div>
 </section>
 
-<!-- 5.4: the author's own position, translated from their Chinese draft. -->
+<!-- My take: the author's own position, translated from their Chinese draft. Six screens, one claim each. -->
 <section class="screen" data-station="bill" data-toc="My take">
-  <div class="text">
-    <p class="kicker">My take</p>
-    <p>Most of this page has been about players and the studio pulling against each other. That conflict is built in, and at times they really are enemies.</p>
-    <p class="display line-big">But they always share one enemy: the grey market.</p>
-    <p>By the grey market I mean everything the rules forbid but players still pay for: gold sellers, boosting services, and the studios that farm for them.</p>
-    <p class="turn">And wherever the grey market goes, bots and cheats go with it. That's no accident. Profit puts them together.</p>
-    <p>Whichever of the three doors a studio picks, the grey market gets through. None of them is clearly the best.</p>
+  <div class="text wide">
+    <p class="kicker take-step">My take · 1 / 6 · The common enemy</p>
+    <p class="display line-big">Two rivals. One common enemy.</p>
+    <div class="split rivals-wrap">
+      <figure class="rivals" role="img" aria-label="Players and the studio pull against each other. Below them, the grey market takes from both.">
+        <svg viewBox="0 0 300 170" aria-hidden="true">
+          <rect class="node" x="6" y="14" width="96" height="34"/><text x="54" y="35">PLAYERS</text>
+          <rect class="node" x="198" y="14" width="96" height="34"/><text x="246" y="35">STUDIO</text>
+          <path class="tug" d="M108 31 H192"/><path class="tug-head" d="M116 24 l-8 7 8 7 M184 24 l8 7 -8 7"/>
+          <rect class="node enemy" x="90" y="118" width="120" height="34"/><text class="enemy-lbl" x="150" y="139">GREY MARKET</text>
+          <path class="hit" d="M126 116 L66 52"/><path class="hit" d="M174 116 L234 52"/>
+        </svg>
+      </figure>
+      <div>
+        <p>All through this page, players and the studio have pulled against each other. At times they really are enemies.</p>
+        <div class="defn">
+          <p class="kicker">Grey market</p>
+          <p>Whatever the rules forbid but players still pay for: gold sellers, boosting services, the studios that farm for them.</p>
+        </div>
+        <p class="turn">It runs on bots and cheats. That's no accident: profit puts them together.</p>
+      </div>
+    </div>
   </div>
 </section>
 
 <section class="screen" data-station="bill">
-  <div class="text">
-    <p class="kicker">My take · Then and now</p>
-    <p>The grey market hasn't always looked like this. In the 2000s, the world economy was different, and so was the technology. Wages in some countries were a small fraction of what players elsewhere would pay, and automation was harder. Cheap human labour was the grey market's best tool: the Chinese farmers around 2008, and the Venezuelans of 2017.</p>
-    <p>As the games industry has grown, the grey market has grown with it, and changed shape. It's no longer a side hustle on the edge of the game but an industry of its own: scripts that farm around the clock, cheats sold by subscription, accounts and boosting for sale.</p>
+  <div class="text wide">
+    <p class="kicker take-step">My take · 2 / 6 · Then and now</p>
+    <p class="display line-big">The grey market grew up.</p>
+    <div class="then-now">
+      <div class="panel">
+        <p class="kicker">2000s · cheap hands</p>
+        <p>Wages in some countries were a fraction of what players elsewhere would pay, and bots were hard to build. So people farmed by hand: in China around 2008, in Venezuela in 2017.</p>
+      </div>
+      <span class="arrow" aria-hidden="true">→</span>
+      <div class="panel">
+        <p class="kicker">Today · an industry</p>
+        <p>As games grew, so did the grey market. Scripts farm around the clock, cheats are sold by subscription, accounts and boosting are for sale.</p>
+      </div>
+    </div>
     <p class="turn">A person needs wages and sleep. A script only needs a machine and electricity.</p>
   </div>
 </section>
 
 <section class="screen" data-station="bill">
-  <div class="text">
-    <p class="kicker">My take · No door</p>
-    <p>When a game bans selling gold for money, the studio earns from subscriptions and from cosmetics that don't change how you play. That has a real upside: big spenders and ordinary players stand on more equal ground, and the game stays fairer.</p>
-    <p>But the demand doesn't go away, and where there's money to be made, a ban only slows the sellers down. Stopping them completely would hurt ordinary players too. Every rule can be dodged, tighter policing costs more to run, and wrong bans and switched-off features fall on everyone. <i>RuneScape</i>'s 2007 trade limit hit every honest player, and the sellers came back anyway.</p>
-    <p>So why not just look the other way? Because today's grey market can't stay small and harmless. Its bots and cheats aren't a side effect. They're how it makes its money: every bot is a tap nobody designed, pouring out gold and loot at everyone else's expense.</p>
+  <div class="text wide">
+    <p class="kicker take-step">My take · 3 / 6 · Door one</p>
+    <p class="display line-big">Keep the door shut.</p>
+    <div class="door-card">
+      <figure class="door small" role="img" aria-label="A shut door: no way from dollars to gold or back.">
+        <svg viewBox="0 0 240 120" aria-hidden="true">
+          <circle class="token" cx="30" cy="56" r="20"/><text class="token-lbl" x="30" y="57">$</text>
+          <rect class="frame" x="102" y="8" width="36" height="96"/>
+          <path class="leaf" d="M106 12 L130 18 L130 96 L106 100 Z"/>
+          <circle class="token gold" cx="210" cy="56" r="20"/><text class="token-lbl" x="210" y="57">gp</text>
+          <path class="flow blocked" d="M56 40 H182"/><path class="head blocked" d="M175 33 l8 7 -8 7"/>
+          <path class="flow blocked" d="M184 74 H58"/><path class="head blocked" d="M65 67 l-8 7 8 7"/>
+          <text class="x" x="120" y="41">✕</text><text class="x" x="120" y="75">✕</text>
+        </svg>
+        <figcaption><b>No gold for money</b><i>RuneScape</i> before 2013</figcaption>
+      </figure>
+      <div class="pros-cons">
+        <div><p class="kicker pro">Upside</p><ul>
+          <li>The studio earns from subscriptions and cosmetics that don't change play.</li>
+          <li>Big spenders and everyone else stand on equal ground.</li>
+        </ul></div>
+        <div><p class="kicker con">Catch</p><ul>
+          <li>Demand doesn't go away. A ban only slows the sellers down.</li>
+          <li>Tighter policing costs more and hits honest players: wrong bans, switched-off features, the 2007 trade limit.</li>
+          <li>Ignoring it is worse. Every bot is a tap nobody designed.</li>
+        </ul></div>
+      </div>
+    </div>
+    <p class="verdict">Grey market: slowed, never stopped</p>
   </div>
 </section>
 
 <section class="screen" data-station="bill">
-  <div class="text">
-    <p class="kicker">My take · One way</p>
-    <p>You might think: if you can't beat them, join them. Let the studio sell the gold itself, on top of subscriptions and cosmetics, the way the Bond does. Players get what they want, the money stays out of the grey market, and the studio gets paid. Everyone wins?</p>
-    <p>Not quite. The gold still has a real-money value, so the grey market simply sells it for less than the official price. Venezuela's farmers were selling gold two years after the Bond arrived. A one-way door doesn't shut the grey market out.</p>
-    <p>It also lets players buy their way ahead. The gap between rich and poor players grows, the game loses its balance, and some of its fun.</p>
+  <div class="text wide">
+    <p class="kicker take-step">My take · 4 / 6 · Door two</p>
+    <p class="display line-big">Open it one way.</p>
+    <div class="door-card">
+      <figure class="door small" role="img" aria-label="A one-way door: dollars in, no way back out.">
+        <svg viewBox="0 0 240 120" aria-hidden="true">
+          <circle class="token" cx="30" cy="56" r="20"/><text class="token-lbl" x="30" y="57">$</text>
+          <rect class="frame" x="102" y="8" width="36" height="96"/>
+          <path class="leaf" d="M106 12 L130 18 L130 96 L106 100 Z"/>
+          <circle class="token gold" cx="210" cy="56" r="20"/><text class="token-lbl" x="210" y="57">gp</text>
+          <path class="flow" d="M56 40 H182"/><path class="head" d="M175 33 l8 7 -8 7"/>
+          <path class="flow blocked" d="M184 74 H58"/><path class="head blocked" d="M65 67 l-8 7 8 7"/>
+          <text class="x" x="120" y="75">✕</text>
+        </svg>
+        <figcaption><b>Sell gold, officially</b>the Bond, the WoW Token</figcaption>
+      </figure>
+      <div class="pros-cons">
+        <div><p class="kicker pro">Upside</p><ul>
+          <li>Players can get gold without breaking the rules.</li>
+          <li>Money that went to gold sellers goes to the studio instead.</li>
+        </ul></div>
+        <div><p class="kicker con">Catch</p><ul>
+          <li>Gold now has an official price, so sellers simply undercut it. Venezuela's farmers were busy two years after the Bond.</li>
+          <li>Players can buy their way ahead. The gap between rich and poor grows, and the game loses its balance.</li>
+        </ul></div>
+      </div>
+    </div>
+    <p class="verdict">Grey market: sells below the official price</p>
   </div>
 </section>
 
 <section class="screen" data-station="bill">
-  <div class="text">
-    <p class="kicker">My take · Both ways</p>
-    <p>Some games go further and make it all legal, with an open exchange between game money and real money, like Second Life's LindeX. The studio no longer earns from what players pay in. It takes a cut of every trade instead, so the more currency changes hands, the more it makes. A lively market means a profitable game.</p>
-    <p>This has problems of its own. The gap between rich and poor players is still there, and play is no longer just play. The market is fragile: any change the studio makes can shake it. The assets are hard to value, worth a lot while the game is popular and nothing once it dies, as <i>Axie Infinity</i>'s players found. The law differs from country to country, so property disputes are hard to settle.</p>
-    <p>And with no limits at all, it's a natural home for the grey market. The bots and cheats do as much damage as before, or more.</p>
+  <div class="text wide">
+    <p class="kicker take-step">My take · 5 / 6 · Door three</p>
+    <p class="display line-big">Open it both ways.</p>
+    <div class="door-card">
+      <figure class="door small" role="img" aria-label="A two-way door: dollars in, and game money back out to dollars.">
+        <svg viewBox="0 0 240 120" aria-hidden="true">
+          <circle class="token" cx="30" cy="56" r="20"/><text class="token-lbl" x="30" y="57">$</text>
+          <rect class="frame" x="102" y="8" width="36" height="96"/>
+          <path class="leaf open" d="M106 12 L122 22 L122 92 L106 100 Z"/>
+          <circle class="token gold" cx="210" cy="56" r="20"/><text class="token-lbl" x="210" y="57">L$</text>
+          <path class="flow" d="M56 40 H182"/><path class="head" d="M175 33 l8 7 -8 7"/>
+          <path class="flow" d="M184 74 H58"/><path class="head" d="M65 67 l-8 7 8 7"/>
+        </svg>
+        <figcaption><b>An open exchange</b>Second Life's LindeX</figcaption>
+      </figure>
+      <div class="pros-cons">
+        <div><p class="kicker pro">Upside</p><ul>
+          <li>The studio takes a cut of every trade, so a busy market means a profitable game.</li>
+        </ul></div>
+        <div><p class="kicker con">Catch</p><ul>
+          <li>Rich and poor players still drift apart, and play turns into work.</li>
+          <li>The market is fragile. One update can shake it, and the assets are worth nothing once the game dies, as <i>Axie Infinity</i>'s players found.</li>
+          <li>Laws differ between countries, so disputes are hard to settle.</li>
+        </ul></div>
+      </div>
+    </div>
+    <p class="verdict">Grey market: a natural home</p>
   </div>
 </section>
 
 <section class="screen" data-station="bill">
-  <div class="text">
-    <p>Whatever the door, a game is healthy as long as its players stay: new ones keep arriving, and most old ones keep playing.</p>
-    <p>The grey market lives off that health. It profits by wearing down the game and the experience of the people playing it, spending the game's future for its own gain. Even its own workers lose out. The farmers in Chapter 4 were players too: its cheapest workers, until scripts came cheaper still.</p>
+  <div class="text wide">
+    <p class="kicker take-step">My take · 6 / 6 · Who loses</p>
+    <p>Whatever the door, a game stays healthy only while its players stay. The grey market lives off that health, and spends the game's future for its own gain.</p>
+    <ul class="losers">
+      <li><b>Players</b><span>play beside bots and cheats</span></li>
+      <li><b>The studio</b><span>loses the players who quit</span></li>
+      <li><b>Farmers</b><span>its cheapest workers, until scripts came cheaper</span></li>
+      <li class="wins"><b>Grey market</b><span>gets paid either way</span></li>
+    </ul>
     <p class="display line-big">Players and studios can be each other's enemies. The grey market is always the enemy of both.</p>
   </div>
 </section>
@@ -964,6 +1064,6 @@
 
 <div class="fade-cover" id="fade-cover" aria-hidden="true"></div>
 
-<script src="js/main.js?v=4"></script>
+<script src="js/main.js?v=5"></script>
 </body>
 </html>

@@ -643,6 +643,64 @@ html.free-scroll { scroll-snap-type: none; }
 .draft-tag { display: inline-block; font-family: var(--font-mono); font-size: .7rem; letter-spacing: .1em; color: var(--alert); border: 1px dashed var(--alert); padding: .15rem .5rem; }
 .my-take.placeholder { border: 1px dashed var(--muted); padding: 1rem 1.2rem; color: var(--muted); }
 
+/* ---------- my take ---------- */
+/* Six screens, each a step label, one headline and one picture. */
+
+.take-step { color: var(--alert); }
+.text.wide > .display.line-big { margin-top: .2rem !important; }
+
+.rivals-wrap { display: grid; grid-template-columns: 20rem 1fr; gap: 2rem; align-items: center; margin-top: 1rem; }
+.rivals { margin: 0; }
+.rivals svg { display: block; width: 100%; height: auto; font-family: var(--font-mono); }
+.rivals .node { fill: var(--panel); stroke: var(--ink); stroke-width: 2; }
+.rivals text { font-size: 12px; letter-spacing: .08em; text-anchor: middle; dominant-baseline: central; fill: var(--ink); }
+.rivals .tug, .rivals .tug-head { fill: none; stroke: var(--ink); stroke-width: 2.5; }
+.rivals .tug { stroke-dasharray: 6 5; animation: flow 1s linear infinite; }
+.rivals .enemy { stroke: var(--alert); stroke-width: 3; }
+.rivals .enemy-lbl { fill: var(--alert); font-weight: 600; }
+.rivals .hit { fill: none; stroke: var(--alert); stroke-width: 2.5; stroke-dasharray: 4 4; animation: flow .8s linear infinite reverse; }
+.defn { border-left: 3px solid var(--alert); padding: .2rem 0 .2rem .9rem; margin: 1rem 0; }
+.defn .kicker { color: var(--alert); margin: 0 0 .2rem !important; }
+.defn p:last-child { margin: 0 !important; }
+
+.then-now { display: grid; grid-template-columns: 1fr auto 1fr; gap: 1rem; align-items: stretch; margin: 1.25rem 0; }
+.then-now .panel p { margin: 0 !important; font-size: 1rem; line-height: 1.5; }
+.then-now .panel .kicker { margin-bottom: .5rem !important; color: var(--ink); }
+.then-now .panel:last-child { border-color: var(--alert); }
+.then-now .panel:last-child .kicker { color: var(--alert); }
+.then-now .arrow { align-self: center; font-family: var(--font-mono); font-size: 1.6rem; color: var(--alert); }
+
+.door-card { display: grid; grid-template-columns: 13rem 1fr; gap: 1.75rem; align-items: start; margin: 1.25rem 0 1rem; }
+.door-card .door.small { max-width: none; }
+.pros-cons { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+.pros-cons .kicker { margin: 0 0 .4rem !important; padding-bottom: .3rem; border-bottom: 2px solid currentColor; }
+.pros-cons .pro { color: var(--ink); }
+.pros-cons .con { color: var(--alert); }
+.pros-cons ul { margin: 0; padding-left: 1rem; font-size: .98rem; line-height: 1.45; }
+.pros-cons li { margin-bottom: .45rem; }
+.verdict {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: .85rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  border: 2px solid var(--alert);
+  color: var(--alert);
+  padding: .35rem .7rem;
+  transform: rotate(-1.5deg);
+}
+.js .screen .verdict { opacity: 0; }
+.screen.in .verdict { animation: stamp-in .45s cubic-bezier(.2, 1.6, .4, 1) .9s forwards; }
+
+.losers { list-style: none; margin: 1.25rem 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: .6rem; }
+.losers li { display: flex; flex-direction: column; gap: .3rem; padding: .7rem .8rem; border: 1px solid var(--edge-light); background: var(--panel); }
+.losers b { font-family: var(--font-mono); font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; font-weight: 600; }
+.losers b::before { content: "✕ "; color: var(--alert); }
+.losers span { font-size: .9rem; line-height: 1.35; color: var(--muted); }
+.losers .wins { border: 2px solid var(--alert); }
+.losers .wins b { color: var(--alert); }
+.losers .wins b::before { content: "✓ "; }
+
 .choices.one { grid-template-columns: 1fr; max-width: 26rem; }
 .turn-cost { font-size: 1.15rem; }
 
@@ -721,6 +779,13 @@ details.note .cite { font-size: .85rem; color: var(--muted); }
   .counter-stats .stat { flex-direction: row; align-items: baseline; gap: .75rem; }
   .counter-stats .v { flex: none; min-width: 6.5rem; }
   .doors { gap: .75rem; }
+  .rivals-wrap { grid-template-columns: 1fr; gap: 1rem; }
+  .rivals { max-width: 17rem; }
+  .then-now { grid-template-columns: 1fr; gap: .5rem; }
+  .then-now .arrow { transform: rotate(90deg); justify-self: center; }
+  .door-card { grid-template-columns: 1fr; gap: .75rem; }
+  .door-card .door.small { max-width: 13rem; }
+  .losers { grid-template-columns: 1fr 1fr; }
 }
 
 @media (max-width: 640px) {
@@ -748,4 +813,5 @@ details.note .cite { font-size: .85rem; color: var(--muted); }
   .tank .drop { opacity: 1; }
   .js .console li { opacity: 1; }
   .js .screen .stamps li { opacity: 1; }
+  .js .screen .verdict { opacity: 1; }
 }
