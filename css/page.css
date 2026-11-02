@@ -665,13 +665,14 @@ html.free-scroll { scroll-snap-type: none; }
 .ending.bad .ending-label { color: var(--alert); }
 .ending .ending-title { font-family: var(--font-display); font-size: 1.45rem; line-height: 1.15; color: var(--ink); margin: .2rem 0 .5rem !important; }
 .ending .ending-real { font-style: italic; color: var(--muted); }
+.ending .ending-pouch { font-family: var(--font-mono); font-size: .8rem !important; color: var(--accent); }
 .found { font-family: var(--font-mono); font-size: .75rem; color: var(--muted); margin: .2rem 0 0 !important; }
 
 /* ---------- finale ---------- */
 
 /* The receipt: a till roll, one line at a time, dotted leaders, a torn bottom edge. */
 .receipt {
-  max-width: 27rem;
+  max-width: 34rem;
   margin: 0 auto;
   padding: 1.4rem 1.4rem 2rem;
   font-family: var(--font-mono);
@@ -683,10 +684,18 @@ html.free-scroll { scroll-snap-type: none; }
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), 95% 100%, 90% calc(100% - 8px), 85% 100%, 80% calc(100% - 8px), 75% 100%, 70% calc(100% - 8px), 65% 100%, 60% calc(100% - 8px), 55% 100%, 50% calc(100% - 8px), 45% 100%, 40% calc(100% - 8px), 35% 100%, 30% calc(100% - 8px), 25% 100%, 20% calc(100% - 8px), 15% 100%, 10% calc(100% - 8px), 5% 100%, 0 calc(100% - 8px));
 }
 .receipt-title { text-align: center; font-weight: 600; letter-spacing: .08em; border-bottom: 1px dashed #999; padding-bottom: .6rem; margin: 0 0 .6rem !important; }
-.receipt-lines { list-style: none; margin: 0; padding: 0; min-height: 13rem; }
-.receipt-lines li { display: grid; grid-template-columns: auto 1fr; gap: .2rem .6rem; padding: .35rem 0; border-bottom: 1px dotted #bbb; animation: print-in .25s ease-out; }
+.receipt-lines { list-style: none; margin: 0; padding: 0; min-height: 13rem; line-height: 1.4; }
+.receipt-lines li { display: grid; grid-template-columns: auto 1fr; gap: .2rem .6rem; padding: .25rem 0; border-bottom: 1px dotted #bbb; animation: print-in .25s ease-out; }
+.receipt-lines li { grid-template-columns: 1fr auto; }
 .receipt-lines .k { font-weight: 600; white-space: nowrap; }
-.receipt-lines .v { text-align: right; }
+.receipt-lines .who-tag { font-size: .65rem; text-align: right; align-self: center; }
+.receipt-lines .v { grid-column: 1; color: #444; }
+.receipt-lines .run { grid-column: 2; grid-row: 2; text-align: right; align-self: end; font-weight: 600; white-space: nowrap; }
+.receipt .who-tag { color: #b00020; }
+.receipt .who-tag.director { color: #1f4d8a; }
+.receipt .who-tag.players { color: #7a5a00; }
+.receipt-total.who { font-size: .7rem; font-weight: 400; gap: 1rem; }
+.receipt-total.who span:last-child { text-align: right; }
 @keyframes print-in { from { opacity: 0; transform: translateY(-4px); } }
 .receipt-total { display: flex; justify-content: space-between; font-weight: 600; margin: .6rem 0 0 !important; opacity: 0; transition: opacity .4s; }
 .receipt.totalled .receipt-total { opacity: 1; }

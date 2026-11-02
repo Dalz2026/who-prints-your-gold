@@ -41,6 +41,23 @@
       this.amount.textContent = fmt(n);
     },
     setSub(text) { this.sub.textContent = text; },
+    // Redraw the sub line and the $ line from the ledger.
+    draw() {
+      this.setSub(isLocked() ? "locked · can't trade" : `buys ${fmt(swordsNow())} swords`);
+      const line = $("pouch-usd");
+      if (!line.hidden) line.textContent = state.pricesInUsd ? `≈ ${usd(pouchWorth())}` : "$ ???";
+    },
+    // A short note under the pouch: who just changed it, and how.
+    say(who, text) {
+      const log = $("pouch-log");
+      const tag = document.createElement("b");
+      tag.className = `who-tag ${who}`;
+      tag.textContent = WHO[who];
+      log.replaceChildren(tag, ` ${text}`);
+      log.classList.remove("show");
+      void log.offsetWidth;
+      log.classList.add("show");
+    },
     bump() {
       if (reducedMotion) return;
       this.el.classList.remove("bump");
@@ -55,7 +72,7 @@
     },
     lock(on) {
       this.el.classList.toggle("locked", on);
-      this.setSub(on ? "locked · can't trade" : `buys ${fmt(swordsFor(state.swordPrice))} swords`);
+      this.draw();
       this.bump();
     },
     countTo(target, ms) {
@@ -75,6 +92,27 @@
   };
 
   const swordsFor = (price) => Math.floor(START_GOLD / price);
+
+  // ---------- the ledger ----------
+  // Every change to the pouch is written down with who made it. The pouch, the receipt and the last
+  // chapter all read from here. `value` multiplies what each coin is worth; `locked` freezes it at zero.
+
+  const WHO = { studio: "STUDIO", director: "YOU, AS THE STUDIO", players: "PLAYERS" };
+  const ledger = new Map();
+  const ledgerGold = (entries = [...ledger.values()]) => entries.reduce((n, e) => n + e.gold, 0);
+  const ledgerValue = (entries = [...ledger.values()]) => entries.reduce((n, e) => n * e.value, 1);
+  // What the pouch is worth in day-0 gold: a sword at 100 gold, a Bond at 9.6 million.
+  const worthOf = (entries) => (entries.some((e) => e.locked) && !entries.some((e) => e.unlocks) ? 0 : ledgerGold(entries) * ledgerValue(entries));
+  const pouchWorth = () => worthOf([...ledger.values()]);
+  const isLocked = () => pouchWorth() === 0 && ledgerGold() > 0;
+  const swordsNow = () => Math.floor(pouchWorth() / SWORD_START_PRICE);
+  const pct = (value) => `value ${value >= 1 ? "+" : "−"}${Math.abs(Math.round((value - 1) * 100))}%`;
+
+  function record(key, entry, note) {
+    ledger.set(key, { gold: 0, value: 1, ...entry });
+    pouch.draw();
+    if (note) { pouch.say(entry.who, note); pouch.bump(); }
+  }
 
   // ---------- reveal on scroll ----------
   // A screen with data-on-reveal runs that action the first time it comes into view.
@@ -262,7 +300,9 @@
     $("collect").disabled = true;
     $("collect-skip").hidden = true;
     pouch.show();
-    pouch.setSub(`buys ${fmt(swordsFor(SWORD_START_PRICE))} swords`);
+    record("login", { who: "studio", k: "Collected on login", gold: START_GOLD, text: "printed out of nothing" }, `printed +${fmt(START_GOLD)}`);
+    state.gold = 0;
+    pouch.setGold(0);
     document.body.classList.add("collected");
     if (animated) {
       flyCoins($("collect"), pouch.el, 16);
@@ -434,8 +474,9 @@
     simEls.start.textContent = "[ DAY 30 ]";
     simEls.skip.hidden = true;
 
-    pouch.setSub(`buys ${fmt(swordsFor(price))} swords`);
-    pouch.bump();
+    const value = SWORD_START_PRICE / price;
+    record("mint", { who: "director", k: "The Mint", value, text: `you ran the server: sword ${SWORD_START_PRICE} → ${fmt(price)} gold` },
+      Math.abs(value - 1) < 0.005 ? "prices held · value unchanged" : `a sword costs ${fmt(price)} · ${pct(value)}`);
 
     $("sim-result-text").textContent = simResultText(price);
     $("after-sim").hidden = false;
@@ -586,6 +627,11 @@
     daily.done = true;
     daily.running = false;
     state.dailies = how;
+    if (how === "paid") {
+      record("dailies", { who: "studio", k: "The Leash", gold: DAILY_GOLD, text: "energy ran out; you paid $1.99 (pretend)" }, `+${fmt(DAILY_GOLD)} gold for $1.99`);
+    } else {
+      record("dailies", { who: "studio", k: "The Leash", text: "energy ran out; back tomorrow" }, "+0 · come back tomorrow");
+    }
     setTaskButtons(false);
     $("dailies-out").hidden = true;
     $("dailies-actions").hidden = true;
@@ -605,7 +651,6 @@
       state.dailiesGold = DAILY_GOLD;
       pouch.setGold(state.gold + DAILY_GOLD);
       flyCoins($("dailies"), pouch.el, 6);
-      pouch.bump();
       $("dailies-reward").textContent = `All done: +${DAILY_GOLD} gold`;
       dailiesEnd("paid");
     } else if (daily.energy <= 0) {
@@ -698,31 +743,31 @@
 
   const ENDINGS = {
     good: {
-      tone: "good", label: "GOOD ENDING", title: "Worth staying for",
+      tone: "good", label: "GOOD ENDING", title: "Worth staying for", gold: 50000, value: 1.3, why: "players came back, and more players want more gold",
       text: "The expansion launches late and over budget, but it's good, and players voted for it, so it feels like theirs. Old players come back and new ones arrive. The board gets its numbers, and nobody had to be chained to a chore list.",
       real: "Real studios have pulled this off. Read on.",
       meters: { players: 85, trust: 90, cash: 60 },
     },
     scars: {
-      tone: "mixed", label: "MIXED ENDING", title: "Good game, sore players",
+      tone: "mixed", label: "MIXED ENDING", title: "Good game, sore players", gold: 20000, value: 1.1, why: "most players came back, if carefully",
       text: "The expansion is great. But the grind event made players wonder whether the chores were coming back. They return carefully, with one eye on the exit.",
       real: "Trust is slow to build and quick to spend.",
       meters: { players: 70, trust: 50, cash: 55 },
     },
     treadmill: {
-      tone: "mixed", label: "MIXED ENDING", title: "The treadmill",
+      tone: "mixed", label: "MIXED ENDING", title: "The treadmill", gold: 120000, value: 0.6, why: "the chores poured gold in, so each coin buys less",
       text: "The numbers look great. Players log in every day, clear their lists, buy the pass and complain. Few of them are having fun, but few leave, yet. Emberfall keeps running as a chore machine.",
       real: "Remember that comment: “they know we won't stop playing.”",
       meters: { players: 70, trust: 20, cash: 90 },
     },
     lights: {
-      tone: "bad", label: "BAD ENDING", title: "Lights out",
+      tone: "bad", label: "BAD ENDING", title: "Lights out", gold: 0, value: 0.1, why: "players left, and nobody wants a dying game's gold",
       text: "The bots come back on new accounts every day. Honest players give up on the drop: some buy it from gold sellers, most just quit. Two years later, Emberfall's servers go dark.",
       real: "In chapter 3, RuneScape tries banning bots too.",
       meters: { players: 10, trust: 10, cash: 15 },
     },
     empty: {
-      tone: "bad", label: "BAD ENDING", title: "Big promise, empty launch",
+      tone: "bad", label: "BAD ENDING", title: "Big promise, empty launch", gold: 0, value: 0.5, why: "half the players left, and half the buyers with them",
       text: "The expansion ships late, buggy and thin. Players who waited a year feel cheated, and the money is gone. Good content needs people who know how to make it, and Emberfall didn't have them.",
       real: "That's the risk most studios won't take. Read on.",
       meters: { players: 20, trust: 15, cash: 5 },
@@ -806,10 +851,16 @@
     title.textContent = e.title;
     const text = document.createElement("p");
     text.textContent = id === "good" && story.late ? `It cost you a U-turn and a lost quarter. ${e.text}` : e.text;
+    const effect = `${e.gold ? `+${fmt(e.gold)} gold · ` : ""}${pct(e.value)}`;
+    const hit = document.createElement("p");
+    hit.className = "ending-pouch";
+    hit.textContent = `YOUR POUCH · ${effect} · ${e.why}`;
     const real = document.createElement("p");
     real.className = "ending-real";
     real.textContent = e.real;
-    box.append(label, title, text, real);
+    box.append(label, title, text, hit, real);
+    record("story", { who: "director", k: "Your studio", gold: e.gold, value: e.value, text: e.title }, effect);
+    pouch.setGold(ledgerGold());
     storyLines.appendChild(box);
     const found = document.createElement("p");
     found.className = "found";
@@ -832,6 +883,7 @@
   $("story-start").addEventListener("click", startStory);
   $("story-skip").addEventListener("click", () => {
     $("story-skip").hidden = true;
+    record("story", { who: "director", k: "Your studio", text: "skipped, so nothing changed" });
     openGate("after-story");
   });
   drawMeters();
@@ -851,6 +903,7 @@
     if (state.crisisChoice) return;
     const [label, lines] = crisisLines[btn.dataset.choice];
     state.crisisChoice = label;
+    record("crisis", { who: "studio", k: "The crisis room", text: `you picked “${label}”; overruled` });
     crisisButtons.forEach((b) => { b.disabled = true; b.classList.toggle("picked", b === btn); });
     lines.forEach((line, i) => setTimeout(() => say(line, $("crisis-chat"), 4), pause(700 * (i + 1))));
     setTimeout(() => {
@@ -874,6 +927,7 @@
       panel.classList.add("shake");
     }
     $("trade-alert").hidden = false;
+    record("lock", { who: "studio", k: "Trade blocked", locked: true, text: "gold that can't move is worth nothing" }, "trading locked");
     pouch.lock(true);
     pouch.hint();
     setTimeout(() => {
@@ -898,6 +952,7 @@
     bars.classList.add("grow");
     countUp($("vote-count"), 0, VOTE_TOTAL, 1800);
     setTimeout(() => {
+      record("vote", { who: "players", k: "The vote", unlocks: true, text: `${fmt(VOTE_TOTAL)} votes brought trade back (you: ${state.vote})` }, "voted trading back");
       pouch.lock(false);
       openGate("after-vote");
     }, pause(2000));
@@ -959,6 +1014,7 @@
     document.querySelectorAll("#shop .item").forEach((item, i) => setTimeout(() => flipPrice(item), pause(250 * i)));
     setPhase("paper");
     showUsd();
+    record("bond", { who: "studio", k: "The Exchange", text: "its own counter put a $ price on your gold" }, `your pouch: ≈ ${usd(pouchWorth())}`);
     setTimeout(() => {
       $("usd-after").hidden = false;
       openGate("after-usd");
@@ -968,17 +1024,21 @@
   // ---------- finale: the receipt ----------
   // Printed line by line from `state`, so every reader's receipt is a little different.
 
-  const pouchTotal = () => START_GOLD + state.dailiesGold;
-
+  // Each line carries the pouch's running value in dollars, hidden until REVEAL.
   function receiptLines() {
-    return [
-      ["Collected on login", `${fmt(START_GOLD)} gold`],
-      ["The Mint", `still ${fmt(START_GOLD)} gold, but it buys ${fmt(swordsFor(state.swordPrice))} swords, not ${fmt(swordsFor(SWORD_START_PRICE))}`],
-      ["The Leash", state.dailies === "paid" ? `daily tasks finished after a refill, + ${fmt(DAILY_GOLD)} gold` : "out of energy, back tomorrow, + 0 gold"],
-      ["Your studio", state.ending ? `${ENDINGS[state.ending].title}, ${state.endingsFound.size} of ${Object.keys(ENDINGS).length} endings found` : "story skipped"],
-      ["The Tug of War", `trading locked once, unlocked by ${fmt(VOTE_TOTAL)} votes. You voted: ${state.vote ?? "–"}`],
-      ["The Exchange", "prices shown in $, can't be undone"],
-    ];
+    const entries = [...ledger.values()];
+    return entries.map((e, i) => {
+      const so = entries.slice(0, i + 1);
+      const change = [e.gold ? `+${fmt(e.gold)} gold` : "", e.value !== 1 ? pct(e.value) : ""].filter(Boolean).join(" · ");
+      return { ...e, change, run: usd(worthOf(so)) };
+    });
+  }
+
+  // Who moved the pouch, counted from the ledger (lines that changed nothing still count as decisions).
+  function decidedBy() {
+    const n = { studio: 0, director: 0, players: 0 };
+    ledger.forEach((e) => { n[e.who] += 1; });
+    return n;
   }
 
   let printed = false;
@@ -987,19 +1047,17 @@
     printed = true;
     const list = $("receipt-lines");
     const lines = receiptLines();
-    lines.forEach(([k, v], i) => setTimeout(() => {
+    lines.forEach((line, i) => setTimeout(() => {
       const li = document.createElement("li");
-      const key = document.createElement("span");
-      key.className = "k";
-      key.textContent = k;
-      const val = document.createElement("span");
-      val.className = "v";
-      val.textContent = v;
-      li.append(key, val);
+      const span = (cls, text) => { const el = document.createElement("span"); el.className = cls; el.textContent = text; return el; };
+      li.append(span("k", line.k), span(`who-tag ${line.who}`, WHO[line.who]), span("v", line.change ? `${line.text} (${line.change})` : line.text), span("run", "$ ???"));
+      li.querySelector(".run").dataset.usd = line.run;
       list.appendChild(li);
     }, pause(600 + 450 * i)));
     setTimeout(() => {
-      $("receipt-total").textContent = `${fmt(pouchTotal())} gold`;
+      const n = decidedBy();
+      $("receipt-who").textContent = `STUDIO ${n.studio} · YOU, AS THE STUDIO ${n.director} · PLAYERS ${n.players}`;
+      $("receipt-total").textContent = `${fmt(ledgerGold())} gold`;
       $("receipt").classList.add("totalled");
       $("reveal").disabled = false;
     }, pause(600 + 450 * lines.length + 300));
@@ -1009,14 +1067,36 @@
     if (state.revealed) return;
     state.revealed = true;
     $("reveal").disabled = true;
-    const worth = `≈ ${usd(pouchTotal())}`;
+    const worth = `≈ ${usd(pouchWorth())}`;
     $("receipt-usd").textContent = worth;
     $("receipt").classList.add("revealed");
+    document.querySelectorAll("#receipt-lines .run").forEach((el, i) => setTimeout(() => { el.textContent = el.dataset.usd; }, pause(150 * i)));
     $("pouch-usd").textContent = worth;
-    $("pouch-worth").textContent = worth;
+    fillWorth();
     pouch.hint();
     setTimeout(() => openGate("after-reveal"), pause(900));
   });
+
+  // What it's worth: the heading, the numbers and the farmer's hours all follow the reader's own pouch.
+  const FARM_DAY_USD = 2.5;
+  const FARM_DAY_HOURS = 12;
+
+  function fillWorth() {
+    const dollars = (pouchWorth() * BOND_USD) / BOND_GOLD;
+    const worth = `≈ ${usd(pouchWorth())}`;
+    $("worth-head").textContent = dollars >= 0.9 && dollars <= 1.2 ? "About one dollar." : `About ${usd(pouchWorth())}.`;
+    $("worth-again").textContent = worth;
+    $("pouch-worth").textContent = worth;
+    const hours = (dollars / FARM_DAY_USD) * FARM_DAY_HOURS;
+    const mins = Math.round(hours * 60);
+    $("worth-work").textContent = hours >= 1.5 ? `about ${Math.round(hours)} hours of work`
+      : mins >= 60 ? "about an hour of work"
+      : mins >= 2 ? `about ${mins} minutes of work`
+      : "less than a couple of minutes of work";
+    const n = decidedBy();
+    $("count-studio").textContent = n.studio === 1 ? "once" : `${n.studio} times`;
+    $("count-players").textContent = n.players === 1 ? "once" : `${n.players} times`;
+  }
 
   // ---------- finale: your turn ----------
   // No right answer: picking one only shows what that choice costs.
@@ -1037,5 +1117,5 @@
     $("logout-after").hidden = false;
   });
 
-  window.WPYG = { state, pouch };
+  window.WPYG = { state, pouch, ledger };
 })();

@@ -226,6 +226,13 @@ blockquote.quote cite { display: block; font-style: normal; font-size: .85rem; c
 .pouch .amount { font-size: 1.3rem; color: var(--accent); font-variant-numeric: tabular-nums; }
 .pouch .sub { display: block; font-family: var(--font-mono); font-size: .7rem; color: var(--muted); }
 .pouch .usd { display: block; font-family: var(--font-mono); font-size: .8rem; color: var(--muted); }
+/* Who just changed the pouch: shown for a few seconds, then gone. */
+.pouch .log { display: block; max-width: 13rem; font-family: var(--font-mono); font-size: .68rem; line-height: 1.35; color: var(--ink); opacity: 0; max-height: 0; overflow: hidden; }
+.pouch .log.show { animation: pouch-log 4.5s ease forwards; }
+@keyframes pouch-log { 0% { opacity: 0; max-height: 0; } 8%, 80% { opacity: 1; max-height: 4rem; margin-top: .3rem; } 100% { opacity: 0; max-height: 0; } }
+.who-tag { font-weight: 600; letter-spacing: .06em; color: var(--alert); }
+.who-tag.director { color: var(--chat-name); }
+.who-tag.players { color: var(--accent); }
 .pouch.locked { border-color: var(--alert); }
 .pouch.locked .amount::before { content: "\1F512  "; font-size: .9rem; }
 body[data-phase="paper"] .pouch { border: 1px solid var(--edge-light); outline: 1px dashed var(--edge-light); outline-offset: -5px; }
@@ -247,6 +254,8 @@ body[data-phase="receipt"] .pouch { border: 1px solid #111; font-family: var(--f
     padding: .5rem 1rem calc(.5rem + env(safe-area-inset-bottom));
   }
   .pouch .label { display: none; }
+  .pouch .log { position: absolute; left: 0; right: 0; bottom: 100%; max-width: none; padding: 0 1rem; background: var(--panel); }
+  @keyframes pouch-log { 0% { opacity: 0; max-height: 0; } 8%, 80% { opacity: 1; max-height: 4rem; padding-top: .4rem; padding-bottom: .4rem; } 100% { opacity: 0; max-height: 0; } }
   body { padding-bottom: 4rem; }
 }
 
