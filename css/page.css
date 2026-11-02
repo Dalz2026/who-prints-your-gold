@@ -647,6 +647,8 @@ html.free-scroll { scroll-snap-type: none; }
 /* Six screens, each a step label, one headline and one picture. */
 
 .take-step { color: var(--alert); }
+/* A one-line source under a My take screen: the facts in the author's view are cited too. */
+.source.mini { margin: .75rem 0 0; font-size: .8rem; }
 
 /* End of the story: the four chapters in one table, studio's move against players' answer. */
 .story-end { color: var(--ink); letter-spacing: .2em; }

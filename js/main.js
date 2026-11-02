@@ -616,16 +616,19 @@
       tone: "good", label: "GOOD ENDING", title: "Worth staying for",
       text: "You played the game, not the shop, and when the studio locked you in, you answered with your name on a petition. Players like you won the vote. Your gold isn't worth much in dollars. It was never meant to be.",
       real: "Close to what really happened: players voted free trade back in 2011, and in 2013 a petition and a vote brought back Old School RuneScape.",
+      src: [["RuneScape Wiki", "https://runescape.wiki/w/Wilderness_and_Free_Trade_Vote", "Wilderness and Free Trade Vote"], ["OSRS Wiki", "https://oldschool.runescape.wiki/w/Old_School_RuneScape", "Old School RuneScape"]],
     },
     favourite: {
       tone: "mixed", label: "MIXED ENDING", title: "The studio's favourite",
       text: "You have the sword and a fat pouch. The studio has your money, and it noticed. Next year the energy bar will be a little shorter, and the refills a little dearer.",
       real: "“The price will keep going up, because we keep paying it.” In 2026, it did.",
+      src: [["r/2007scape", "https://www.reddit.com/r/2007scape/s/wzKE4EXrCC", "Jagex 2019/2020 Financial Report Analysis"], ["OSRS Wiki, 2026", "https://oldschool.runescape.wiki/w/Update:Membership_%26_Bonds_Price_Change", "Update:Membership & Bonds Price Change"]],
     },
     treadmill: {
       tone: "bad", label: "BAD ENDING", title: "On the treadmill",
       text: "You did everything the studio asked. You logged in, put in the hours, and never complained. Other players won the vote that freed your gold. The studio's dashboard loves you. Did you have fun?",
       real: "Remember that comment: “they know we won't stop playing.”",
+      src: [["r/2007scape", "https://www.reddit.com/r/2007scape/s/wzKE4EXrCC", "Jagex 2019/2020 Financial Report Analysis"]],
     },
     away: {
       tone: "mixed", label: "MIXED ENDING", title: "Walked away",
@@ -636,6 +639,7 @@
       tone: "bad", label: "BAD ENDING", title: "Caught",
       text: "You paid $2 for gold you no longer have. The studio took it back and put a warning on your account. The seller kept the $2 and found the next buyer. Only the grey market came out ahead.",
       real: "Jagex's 2007 rule: “buying gold for real-world money = a permanent ban”. In practice, it later admitted, buyers got off more lightly than sellers.",
+      src: [["Jagex, 2007", "https://secure.runescape.com/m=news/real-world-trading-is-against-the-rules-", "Real world trading is against the rules"], ["Jagex, 2025", "https://secure.runescape.com/m=news/a-message-about-real-world-trading-rwt", "A Message About Real World Trading (RWT)"]],
     },
     banned: {
       tone: "bad", label: "BAD ENDING", title: "Banned",
@@ -643,6 +647,7 @@
       real: () => (state.path.bank === "grey"
         ? "After the 2007 limit, gold sellers really did start asking buyers for their password and bank PIN, and used their accounts to move gold."
         : "Sellers were always hit hardest: in the first nine months of 2013, Jagex issued 1.1 million bans against gold-farming accounts."),
+      src: () => (state.path.bank === "grey" ? [["RuneScape Wiki", "https://runescape.wiki/w/Real-world_trading", "Real-world trading"]] : [["Jagex, 2013", "https://runescape.wiki/w/Update:Blog_-_An_outline_of_the_impact_of_RuneScape_Bonds", "An outline of the impact of RuneScape Bonds"]]),
     },
   };
 
@@ -675,6 +680,7 @@
     $("ending-title").textContent = e.title;
     $("ending-text").textContent = id === "banned" ? bannedText() : e.text;
     $("ending-real").textContent = typeof e.real === "function" ? e.real() : e.real;
+    fillSource(typeof e.src === "function" ? e.src() : e.src || []);
     $("ending-found").textContent = `Endings found: ${state.endingsFound.size} of ${Object.keys(ENDINGS).length}`;
     fillHour();
     fillWorth();
@@ -684,6 +690,25 @@
   }
 
   // ---------- the last chapter, filled in from the ledger ----------
+
+  // The ending's own source card, built the same way as the fixed ones: [name, link, title] each.
+  function fillSource(list) {
+    const box = $("ending-source");
+    box.hidden = list.length === 0;
+    const name = document.createElement("span");
+    name.className = "name";
+    name.textContent = `Source · ${list.map((s) => s[0]).join("; ")}`;
+    const parts = [name];
+    list.forEach(([, href, title], i) => {
+      const a = document.createElement("a");
+      a.href = href;
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.textContent = `“${title}”`;
+      parts.push(i ? "; " : "", a);
+    });
+    box.replaceChildren(...parts);
+  }
 
   function fillHour() {
     // Only gold earned by playing: refills and Bonds bought theirs, so they're left out.
