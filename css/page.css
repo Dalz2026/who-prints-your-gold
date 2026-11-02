@@ -670,6 +670,17 @@ html.free-scroll { scroll-snap-type: none; }
 .then-now .panel:last-child .kicker { color: var(--alert); }
 .then-now .arrow { align-self: center; font-family: var(--font-mono); font-size: 1.6rem; color: var(--alert); }
 
+/* Doors one and two: the studio's bill against the cheater's, under one condition. */
+.race { display: grid; grid-template-columns: 1fr auto 1fr; gap: .75rem 1rem; align-items: stretch; margin: 1rem 0; }
+.race .panel .kicker { margin: 0 0 .4rem !important; color: var(--ink); }
+.race .panel:nth-child(3) .kicker { color: var(--alert); }
+.race ul { margin: 0; padding-left: 1rem; font-size: .98rem; line-height: 1.45; }
+.race-cost { font-family: var(--font-mono); font-size: .75rem; letter-spacing: .04em; color: var(--muted); margin: .5rem 0 0 !important; padding-top: .4rem; border-top: 1px dashed var(--edge-light); }
+.race .vs { align-self: center; font-family: var(--font-mono); font-weight: 600; letter-spacing: .1em; color: var(--alert); }
+.race-rule { grid-column: 1 / -1; border: 2px dashed var(--alert); padding: .6rem .9rem; }
+.race-rule .kicker { color: var(--alert); margin: 0 0 .25rem !important; }
+.race-rule p:last-child { margin: 0 !important; font-size: .98rem; }
+
 .door-card { display: grid; grid-template-columns: 13rem 1fr; gap: 1.75rem; align-items: start; margin: 1.25rem 0 1rem; }
 .door-card .door.small { max-width: none; }
 .pros-cons { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
@@ -784,6 +795,8 @@ details.note .cite { font-size: .85rem; color: var(--muted); }
   .then-now { grid-template-columns: 1fr; gap: .5rem; }
   .then-now .arrow { transform: rotate(90deg); justify-self: center; }
   .door-card { grid-template-columns: 1fr; gap: .75rem; }
+  .race { grid-template-columns: 1fr; gap: .5rem; }
+  .race .vs { justify-self: center; }
   .door-card .door.small { max-width: 13rem; }
   .losers { grid-template-columns: 1fr 1fr; }
 }
